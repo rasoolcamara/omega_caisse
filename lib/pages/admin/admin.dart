@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:ordering_services/constants/app_api.dart';
 import 'package:ordering_services/pages/admin/payment.dart';
 import 'package:ordering_services/pages/auth/password_update.dart';
 import 'package:ordering_services/pages/history/history.dart';
@@ -107,7 +108,7 @@ class _AdminPageState extends State<AdminPage> {
                                 title: Padding(
                                   padding: const EdgeInsets.only(bottom: 10.0),
                                   child: Text(
-                                    "Fallou Tall",
+                                    userName,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
@@ -116,7 +117,7 @@ class _AdminPageState extends State<AdminPage> {
                                   ),
                                 ),
                                 subtitle: Text(
-                                  "Tel: 775779393",
+                                  userPhone,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w400,
                                     fontSize: 14,
@@ -134,266 +135,287 @@ class _AdminPageState extends State<AdminPage> {
                             color: Colors.grey,
                           ),
                           // Historique
-                          InkWell(
-                            onTap: () {
-                              print("Contacter un de nos agents");
-                              nextScreen(
-                                context,
-                                HistoryPage(),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                top: 40,
-                                right: 5.0,
-                                left: 10.0,
-                              ),
-                              child: ListTile(
-                                leading: Container(
-                                  height: 50,
-                                  width: 50,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(30.0),
+                          userProfile == 3
+                              ? InkWell(
+                                  onTap: () {
+                                    print("Contacter un de nos agents");
+                                    nextScreen(
+                                      context,
+                                      HistoryPage(),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 40,
+                                      right: 5.0,
+                                      left: 10.0,
+                                    ),
+                                    child: ListTile(
+                                      leading: Container(
+                                        height: 50,
+                                        width: 50,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade200,
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(30.0),
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.history,
+                                          color: AppColors.greenDark,
+                                          size: 25,
+                                        ),
+                                      ),
+                                      title: Padding(
+                                        padding: const EdgeInsets.all(10.0),
+                                        child: Text(
+                                          "Historique",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                      trailing: Icon(
+                                        Icons.arrow_forward_ios_outlined,
+                                        color: Colors.black.withOpacity(.8),
+                                        size: 20,
+                                      ),
                                     ),
                                   ),
-                                  child: Icon(
-                                    Icons.history,
-                                    color: AppColors.greenDark,
-                                    size: 25,
-                                  ),
-                                ),
-                                title: Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Text(
-                                    "Historique",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                trailing: Icon(
-                                  Icons.arrow_forward_ios_outlined,
-                                  color: Colors.black.withOpacity(.8),
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
+                                )
+                              : Container(),
                           // Paiement
-                          InkWell(
-                            onTap: () {
-                              print("Paiement");
-                              showModalBottomSheet(
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                context: context,
-                                builder: (context) {
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.only(
-                                        topRight: Radius.circular(24),
-                                        topLeft: Radius.circular(24),
-                                      ),
-                                    ),
-                                    width: MediaQuery.of(context).size.width,
-                                    height: 250,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: 40,
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Padding(
+                          userProfile == 3
+                              ? InkWell(
+                                  onTap: () {
+                                    print("Paiement");
+                                    showModalBottomSheet(
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      context: context,
+                                      builder: (context) {
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.only(
+                                              topRight: Radius.circular(24),
+                                              topLeft: Radius.circular(24),
+                                            ),
+                                          ),
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          height: 250,
+                                          child: Padding(
                                             padding: const EdgeInsets.only(
-                                              left: 40,
-                                              bottom: 20.0,
+                                              top: 40,
                                             ),
-                                            child: Text(
-                                              "Payer votre abonnement avec :",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w400,
-                                                fontSize: 14,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              InkWell(
-                                                onTap: () {
-                                                  Navigator.of(context).pop();
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                    left: 40,
+                                                    bottom: 20.0,
+                                                  ),
+                                                  child: Text(
+                                                    "Payer votre abonnement de 5.000 FCFA avec :",
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      fontSize: 14,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    InkWell(
+                                                      onTap: () {
+                                                        Navigator.of(context)
+                                                            .pop();
 
-                                                  Navigator.of(context).push(
-                                                    PageRouteBuilder(
-                                                      pageBuilder:
-                                                          (_, __, ___) =>
-                                                              PaymentPage(
-                                                        wallet: 1,
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                                child: Material(
-                                                  elevation: 5,
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                    Radius.circular(50),
-                                                  ),
-                                                  child: Container(
-                                                    height: 85,
-                                                    width: 85,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius:
-                                                          BorderRadius.all(
-                                                        Radius.circular(50),
-                                                      ),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: AppColors
-                                                              .greenDark
-                                                              .withOpacity(0.1),
-                                                          blurRadius: 4.0,
-                                                          spreadRadius: 0.0,
-                                                          offset:
-                                                              Offset(0.0, 0.0),
-                                                        )
-                                                      ],
-                                                    ),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              5.0),
-                                                      child: Image(
-                                                        image: AssetImage(
-                                                          "assets/logo-part/orange-money.png",
+                                                        Navigator.of(context)
+                                                            .push(
+                                                          PageRouteBuilder(
+                                                            pageBuilder:
+                                                                (_, __, ___) =>
+                                                                    PaymentPage(
+                                                              wallet: 1,
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                      child: Material(
+                                                        elevation: 5,
+                                                        borderRadius:
+                                                            BorderRadius.all(
+                                                          Radius.circular(50),
                                                         ),
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                width: 40.0,
-                                              ),
-                                              InkWell(
-                                                onTap: () {
-                                                  Navigator.of(context).pop();
-                                                  Navigator.of(context).push(
-                                                    PageRouteBuilder(
-                                                      pageBuilder:
-                                                          (_, __, ___) =>
-                                                              PaymentPage(
-                                                        wallet: 2,
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                                child: Material(
-                                                  elevation: 5,
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                    Radius.circular(50),
-                                                  ),
-                                                  child: Container(
-                                                    height: 85,
-                                                    width: 85,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius:
-                                                          BorderRadius.all(
-                                                        Radius.circular(50),
-                                                      ),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: AppColors
-                                                              .greenDark
-                                                              .withOpacity(0.1),
-                                                          blurRadius: 4.0,
-                                                          spreadRadius: 0.0,
-                                                          offset:
-                                                              Offset(0.0, 0.0),
-                                                        )
-                                                      ],
-                                                    ),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              5.0),
-                                                      child: Image(
-                                                        image: AssetImage(
-                                                          "assets/logo-part/wave.png",
+                                                        child: Container(
+                                                          height: 85,
+                                                          width: 85,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .all(
+                                                              Radius.circular(
+                                                                  50),
+                                                            ),
+                                                            boxShadow: [
+                                                              BoxShadow(
+                                                                color: AppColors
+                                                                    .greenDark
+                                                                    .withOpacity(
+                                                                        0.1),
+                                                                blurRadius: 4.0,
+                                                                spreadRadius:
+                                                                    0.0,
+                                                                offset: Offset(
+                                                                    0.0, 0.0),
+                                                              )
+                                                            ],
+                                                          ),
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(5.0),
+                                                            child: Image(
+                                                              image: AssetImage(
+                                                                "assets/logo-part/orange-money.png",
+                                                              ),
+                                                              fit: BoxFit.cover,
+                                                            ),
+                                                          ),
                                                         ),
-                                                        fit: BoxFit.cover,
                                                       ),
                                                     ),
-                                                  ),
+                                                    SizedBox(
+                                                      width: 40.0,
+                                                    ),
+                                                    InkWell(
+                                                      onTap: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        Navigator.of(context)
+                                                            .push(
+                                                          PageRouteBuilder(
+                                                            pageBuilder:
+                                                                (_, __, ___) =>
+                                                                    PaymentPage(
+                                                              wallet: 2,
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                      child: Material(
+                                                        elevation: 5,
+                                                        borderRadius:
+                                                            BorderRadius.all(
+                                                          Radius.circular(50),
+                                                        ),
+                                                        child: Container(
+                                                          height: 85,
+                                                          width: 85,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .all(
+                                                              Radius.circular(
+                                                                  50),
+                                                            ),
+                                                            boxShadow: [
+                                                              BoxShadow(
+                                                                color: AppColors
+                                                                    .greenDark
+                                                                    .withOpacity(
+                                                                        0.1),
+                                                                blurRadius: 4.0,
+                                                                spreadRadius:
+                                                                    0.0,
+                                                                offset: Offset(
+                                                                    0.0, 0.0),
+                                                              )
+                                                            ],
+                                                          ),
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(5.0),
+                                                            child: Image(
+                                                              image: AssetImage(
+                                                                "assets/logo-part/wave.png",
+                                                              ),
+                                                              fit: BoxFit.cover,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
-                                        ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 16,
+                                      right: 5.0,
+                                      left: 10.0,
+                                    ),
+                                    child: ListTile(
+                                      leading: Container(
+                                        height: 50,
+                                        width: 50,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade200,
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(30.0),
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.paid,
+                                          color: AppColors.greenDark,
+                                          size: 30,
+                                        ),
+                                      ),
+                                      title: Padding(
+                                        padding: const EdgeInsets.all(10.0),
+                                        child: Text(
+                                          "Paiement",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                      trailing: Icon(
+                                        Icons.arrow_forward_ios_outlined,
+                                        color: Colors.black.withOpacity(.8),
+                                        size: 20,
                                       ),
                                     ),
-                                  );
-                                },
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                top: 16,
-                                right: 5.0,
-                                left: 10.0,
-                              ),
-                              child: ListTile(
-                                leading: Container(
-                                  height: 50,
-                                  width: 50,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(30.0),
-                                    ),
                                   ),
-                                  child: Icon(
-                                    Icons.paid,
-                                    color: AppColors.greenDark,
-                                    size: 30,
-                                  ),
-                                ),
-                                title: Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Text(
-                                    "Paiement",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                trailing: Icon(
-                                  Icons.arrow_forward_ios_outlined,
-                                  color: Colors.black.withOpacity(.8),
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
+                                )
+                              : Container(),
                           // Modifier mot de passe
                           InkWell(
                             onTap: () {
@@ -447,7 +469,7 @@ class _AdminPageState extends State<AdminPage> {
                           InkWell(
                             onTap: () {
                               print("Contacter un de nos agents");
-                              launch("tel://+221776738631");
+                              launch("tel://+221786342370");
                               // _callSAV();
                             },
                             child: Padding(
@@ -548,15 +570,25 @@ class _AdminPageState extends State<AdminPage> {
                                                   ),
                                                   child: FlatButton(
                                                     onPressed: () async {
-                                                      // SharedPreferences _prefs =
-                                                      //     await SharedPreferences
-                                                      //         .getInstance();
-                                                      // await _prefs.setString(
-                                                      //     "activeToken", '');
-                                                      // await _prefs.setBool(
-                                                      //     "isLoggedIn", false);
-                                                      // await _prefs.setInt(
-                                                      //     "userId", 1);
+                                                      SharedPreferences _prefs =
+                                                          await SharedPreferences
+                                                              .getInstance();
+                                                      await _prefs.setString(
+                                                          "activeToken", '');
+                                                      await _prefs.setBool(
+                                                          "isLoggedIn", false);
+                                                      await _prefs.setInt(
+                                                          "userId", 0);
+                                                      await _prefs.setInt(
+                                                          "profileId", 0);
+
+                                                      await _prefs.setInt(
+                                                          "userSubscription",
+                                                          2);
+                                                      await _prefs.setString(
+                                                          "userPhone", '');
+                                                      await _prefs.setString(
+                                                          "userName", '');
                                                       Navigator.of(context)
                                                           .pop();
                                                       Navigator.of(context)
@@ -655,6 +687,6 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   void _callSAV() async {
-    if (!await launch("tel://+221776738631")) throw 'Could not launch tel';
+    if (!await launch("tel://+221786342370")) throw 'Could not launch tel';
   }
 }

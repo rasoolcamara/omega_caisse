@@ -6,6 +6,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:ordering_services/constants/app_colors.dart';
 import 'package:ordering_services/constants/app_text.dart';
 import 'package:ordering_services/pages/home/home.dart';
+import 'package:ordering_services/services/auth/auth_service.dart';
 import 'package:ordering_services/utils/next_screen.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
@@ -27,11 +28,13 @@ class NewPasswordConfirmPage extends StatefulWidget {
 class _NewPasswordConfirmPageState extends State<NewPasswordConfirmPage> {
   final GlobalKey<FormState> _paymentFormKey = GlobalKey<FormState>();
   TextEditingController controller = TextEditingController(text: "");
+  AuthService authService = AuthService();
 
   final List<String> errors = [];
   String _countryCode = "+221";
   String otpCode;
   bool _loading = false;
+  bool _error = false;
 
   final spinkit = SpinKitRing(
     color: AppColors.greenDark.withOpacity(0.5),
@@ -103,8 +106,9 @@ class _NewPasswordConfirmPageState extends State<NewPasswordConfirmPage> {
                                       backgroundColor: Colors.white,
                                       appContext: context,
                                       length: 4,
-                                      obscureText: false,
+                                      obscureText: true,
                                       autoFocus: true,
+                                      obscuringCharacter: '•',
                                       hintCharacter: '•',
                                       hintStyle: TextStyle(
                                         fontSize: 32,
@@ -116,13 +120,19 @@ class _NewPasswordConfirmPageState extends State<NewPasswordConfirmPage> {
                                         shape: PinCodeFieldShape.underline,
                                         borderWidth: 3.0,
                                         activeFillColor: Colors.white,
-                                        activeColor: AppColors.greenDark
-                                            .withOpacity(0.3),
+                                        activeColor: _error
+                                            ? Colors.red.withOpacity(0.3)
+                                            : AppColors.greenDark
+                                                .withOpacity(0.3),
                                         inactiveFillColor: Colors.white,
-                                        inactiveColor: AppColors.greenDark
-                                            .withOpacity(0.3),
+                                        inactiveColor: _error
+                                            ? Colors.red.withOpacity(0.3)
+                                            : AppColors.greenDark
+                                                .withOpacity(0.3),
                                         selectedFillColor: Colors.white,
-                                        selectedColor: AppColors.greenDark,
+                                        selectedColor: _error
+                                            ? Colors.red
+                                            : AppColors.greenDark,
                                       ),
                                       cursorColor: Colors.black,
                                       animationDuration:
@@ -132,16 +142,30 @@ class _NewPasswordConfirmPageState extends State<NewPasswordConfirmPage> {
                                       // controller: textEditingController,
                                       keyboardType: TextInputType.number,
 
-                                      onCompleted: (value) {
+                                      onCompleted: (value) async {
                                         print("Completed");
                                         setState(() {
                                           otpCode = value;
                                         });
 
-                                        nextScreen(
-                                          context,
-                                          HomePage(),
-                                        );
+                                        if (otpCode == widget.newPassword) {
+                                          final result = await authService
+                                              .updateOTPCode(otpCode);
+
+                                          if (result) {
+                                            Navigator.pop(context);
+                                            Navigator.pop(context);
+                                            Navigator.pop(context);
+                                          } else {
+                                            setState(() {
+                                              _error = true;
+                                            });
+                                          }
+                                        } else {
+                                          setState(() {
+                                            _error = true;
+                                          });
+                                        }
                                       },
                                       // onTap: () {
                                       //   print("Pressed");

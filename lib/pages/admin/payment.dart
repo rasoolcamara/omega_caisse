@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:ordering_services/constants/app_api.dart';
 import 'package:ordering_services/constants/app_colors.dart';
 import 'package:ordering_services/pages/home/home.dart';
 import 'package:ordering_services/services/checkout_invoice.dart';
@@ -23,8 +24,9 @@ class PaymentPage extends StatefulWidget {
 
 class _PaymentPageState extends State<PaymentPage> {
   final GlobalKey<FormState> _paymentFormKey = GlobalKey<FormState>();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _amountController = TextEditingController();
+  TextEditingController _phoneController = TextEditingController();
+  TextEditingController _amountController = TextEditingController();
+  TextEditingController _codeController = TextEditingController();
 
   final PaydunyaService paydunyaService = PaydunyaService();
   final WaveService waveService = WaveService();
@@ -40,6 +42,12 @@ class _PaymentPageState extends State<PaymentPage> {
     lineWidth: 10.0,
     size: 100.0,
   );
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneController = TextEditingController(text: userPhone);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,10 +85,13 @@ class _PaymentPageState extends State<PaymentPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            // Email and Phone
+                            // Phone
                             Padding(
                               padding: const EdgeInsets.only(
-                                  left: 25.0, right: 25.0, top: 60.0),
+                                left: 25.0,
+                                right: 25.0,
+                                top: 60.0,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
@@ -184,10 +195,13 @@ class _PaymentPageState extends State<PaymentPage> {
                                 ],
                               ),
                             ),
-                            // Password
-                            Padding(
+                            // Amount
+                            /* Padding(
                               padding: const EdgeInsets.only(
-                                  left: 25.0, right: 25.0, top: 25.0),
+                                left: 25.0,
+                                right: 25.0,
+                                top: 25.0,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
@@ -285,7 +299,108 @@ class _PaymentPageState extends State<PaymentPage> {
                                   ),
                                 ],
                               ),
-                            ),
+                            ), */
+
+                            widget.wallet == 1
+                                ? Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 25.0, right: 25.0, top: 25.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          "Code OTP",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w400,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 8,
+                                        ),
+                                        Container(
+                                          height: 52.5,
+                                          decoration: BoxDecoration(
+                                            color: Colors.transparent,
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(5.0),
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.black,
+                                              width: 1.0,
+                                            ),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(0.0),
+                                            child: Theme(
+                                              data: ThemeData(
+                                                  hintColor:
+                                                      Colors.transparent),
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(
+                                                  left: 0.0,
+                                                ),
+                                                child: TextFormField(
+                                                  style: TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Colors.black,
+                                                  ),
+                                                  textAlign: TextAlign.start,
+                                                  keyboardType:
+                                                      TextInputType.phone,
+                                                  autocorrect: false,
+                                                  autofocus: false,
+                                                  controller: _codeController,
+                                                  decoration: InputDecoration(
+                                                    border: InputBorder.none,
+                                                    contentPadding:
+                                                        EdgeInsets.only(
+                                                      left: 20.0,
+                                                      bottom: 16,
+                                                    ),
+                                                    filled: true,
+                                                    floatingLabelBehavior:
+                                                        FloatingLabelBehavior
+                                                            .never,
+                                                    fillColor:
+                                                        Colors.transparent,
+                                                    labelText: '',
+                                                    hintStyle: TextStyle(
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: Colors.black,
+                                                    ),
+                                                    labelStyle: TextStyle(
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 8.0,
+                                        ),
+                                        Text(
+                                          "Tapez #144#391*code_secret# pour obtenir un code de paiement!",
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w400,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : Container(),
 
                             // FormError(errors: errors),
                             Padding(
@@ -296,22 +411,23 @@ class _PaymentPageState extends State<PaymentPage> {
                               ),
                               child: FlatButton(
                                 onPressed: () async {
-                                  if (_amountController.text.isNotEmpty &&
-                                      _amountController.text.isNotEmpty) {
+                                  if (_phoneController.text.isNotEmpty) {
                                     setState(() {
                                       _loading = true;
                                     });
                                     final checkoutInvoice =
-                                        await paydunyaService.checkoutInvoice(
-                                      num.parse(_amountController.text),
-                                    );
+                                        await paydunyaService
+                                            .checkoutInvoice(200 /* 5000 */);
                                     if (checkoutInvoice != null) {
                                       var paymentResult = false;
 
                                       switch (widget.wallet) {
                                         case 1:
-                                          paymentResult = await omsnService
-                                              .payment(_phoneController.text);
+                                          paymentResult =
+                                              await omsnService.payment(
+                                            _phoneController.text,
+                                            _codeController.text,
+                                          );
                                           break;
                                         case 2:
                                           paymentResult = await waveService

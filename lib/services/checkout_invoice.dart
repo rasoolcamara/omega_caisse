@@ -17,7 +17,7 @@ class PaydunyaService {
         "phone": "775779393",
       },
       "custom_data": {
-        "transaction_form": "box_app",
+        "transaction_form": "omega_caisse",
       }
     };
 

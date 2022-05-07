@@ -14,11 +14,9 @@ import 'package:url_launcher/url_launcher.dart';
 class NewPasswordPage extends StatefulWidget {
   NewPasswordPage({
     Key key,
-    // this.wallet,
     this.phone,
   }) : super(key: key);
 
-  // final Wallet wallet;
   final String phone;
   @override
   _NewPasswordPageState createState() => _NewPasswordPageState();
@@ -105,7 +103,8 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                                       backgroundColor: Colors.white,
                                       appContext: context,
                                       length: 4,
-                                      obscureText: false,
+                                      obscureText: true,
+                                      obscuringCharacter: '•',
                                       autoFocus: true,
                                       hintCharacter: '•',
                                       hintStyle: TextStyle(

@@ -6,6 +6,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:ordering_services/constants/app_colors.dart';
 import 'package:ordering_services/pages/auth/new_password_confim.dart';
 import 'package:ordering_services/pages/home/home.dart';
+import 'package:ordering_services/services/auth/auth_service.dart';
 import 'package:ordering_services/utils/next_screen.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -24,8 +25,10 @@ class _LoginPageState extends State<LoginPage> {
   final List<String> errors = [];
   String _countryCode = "+221";
 
-  bool _loading = false;
+  AuthService authService = AuthService();
+  String otpCode;
 
+  bool _loading = false;
   final spinkit = SpinKitRing(
     color: AppColors.greenDark.withOpacity(0.5),
     lineWidth: 10.0,
@@ -49,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
                     height: 16,
                   ),
                   Text(
-                    'Configuration en cours ...',
+                    'Connexion en cours ...',
                   )
                 ],
               ),
@@ -69,17 +72,17 @@ class _LoginPageState extends State<LoginPage> {
                       child: Column(
                         children: <Widget>[
                           Container(
-                            height: 90,
-                            width: 90,
+                            height: 150,
+                            width: 150,
                             padding: const EdgeInsets.all(20.0),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(5.0),
-                              color: AppColors.greenLigth,
+                              // color: AppColors.greenLigth,
                             ),
-                            child: Icon(
-                              Icons.person,
-                              size: 35,
-                              color: AppColors.greenDark,
+                            child: Image(
+                              image: AssetImage(
+                                'assets/ocaisse.png',
+                              ),
                             ),
                           ),
                           Form(
@@ -138,9 +141,9 @@ class _LoginPageState extends State<LoginPage> {
                                                 ),
                                                 textAlign: TextAlign.start,
                                                 keyboardType:
-                                                    TextInputType.phone,
+                                                    TextInputType.number,
                                                 autocorrect: false,
-                                                autofocus: false,
+                                                autofocus: true,
                                                 controller: _phoneController,
                                                 decoration: InputDecoration(
                                                   border: InputBorder.none,
@@ -231,8 +234,9 @@ class _LoginPageState extends State<LoginPage> {
                                             backgroundColor: Colors.white,
                                             appContext: context,
                                             length: 4,
-                                            obscureText: false,
-                                            autoFocus: true,
+                                            obscureText: true,
+                                            autoFocus: false,
+                                            obscuringCharacter: '•',
                                             hintCharacter: '•',
                                             hintStyle: TextStyle(
                                               fontSize: 32,
@@ -264,9 +268,9 @@ class _LoginPageState extends State<LoginPage> {
 
                                             onCompleted: (value) {
                                               print("Completed");
-                                              // setState(() {
-                                              //   otpCode = value;
-                                              // });
+                                              setState(() {
+                                                otpCode = value;
+                                              });
 
                                               // nextScreen(
                                               //   context,
@@ -305,21 +309,26 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                   child: FlatButton(
                                     onPressed: () async {
-                                      Navigator.of(context).pushReplacement(
-                                        PageRouteBuilder(
-                                          pageBuilder: (_, __, ___) =>
-                                              HomePage(),
-                                        ),
+                                      setState(() {
+                                        _loading = true;
+                                      });
+                                      final user = await authService.login(
+                                        _phoneController.text,
+                                        otpCode,
                                       );
-                                      /* if (application != null) {
+                                      setState(() {
+                                        _loading = false;
+                                      });
+                                      if (user != null) {
                                         print("Athentification Réussi!");
-                                        print(application.toString());
-
-                                        // setState(() {
-                                        //   _loading = false;
-                                        // });
+                                        print(user.toString());
+                                        Navigator.of(context).pushReplacement(
+                                          PageRouteBuilder(
+                                            pageBuilder: (_, __, ___) =>
+                                                HomePage(),
+                                          ),
+                                        );
                                       } else {
-                                        
                                         showDialog(
                                           context: context,
                                           builder: (BuildContext context) {
@@ -346,7 +355,7 @@ class _LoginPageState extends State<LoginPage> {
                                                         child: Icon(
                                                           Icons
                                                               .warning_amber_rounded,
-                                                          color: red,
+                                                          color: Colors.red,
                                                           size: 40,
                                                         ),
                                                       ),
@@ -392,7 +401,10 @@ class _LoginPageState extends State<LoginPage> {
                                                                     BorderRadius
                                                                         .circular(
                                                                             5.0),
-                                                                color: red10,
+                                                                color: Colors
+                                                                    .red
+                                                                    .withOpacity(
+                                                                        .2),
                                                               ),
                                                               child: Center(
                                                                 child: Text(
@@ -401,7 +413,8 @@ class _LoginPageState extends State<LoginPage> {
                                                                       TextStyle(
                                                                     fontSize:
                                                                         14.0,
-                                                                    color: red,
+                                                                    color: Colors
+                                                                        .red,
                                                                     fontWeight:
                                                                         FontWeight
                                                                             .w600,
@@ -419,7 +432,7 @@ class _LoginPageState extends State<LoginPage> {
                                             );
                                           },
                                         );
-                                      } */
+                                      }
                                     },
                                     child: Padding(
                                       padding: const EdgeInsets.all(1.0),
@@ -447,6 +460,34 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 SizedBox(
                                   height: 35.0,
+                                ),
+                                InkWell(
+                                  onTap: () {
+                                    print("Contacter un de nos agents");
+                                    launch("tel://+221786342370");
+                                    // _callSAV();
+                                  },
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        top: 16,
+                                        right: 5.0,
+                                        left: 10.0,
+                                      ),
+                                      child: Text(
+                                        "Mot de passe oublié ?",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                          color: AppColors.greenDark,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 45,
                                 ),
                               ],
                             ),

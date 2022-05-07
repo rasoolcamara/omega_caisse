@@ -6,6 +6,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:ordering_services/constants/app_colors.dart';
 import 'package:ordering_services/constants/app_text.dart';
 import 'package:ordering_services/pages/auth/new_password.dart';
+import 'package:ordering_services/services/auth/auth_service.dart';
 import 'package:ordering_services/utils/next_screen.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
@@ -28,10 +29,13 @@ class _PasswordUpdatePageState extends State<PasswordUpdatePage> {
   final GlobalKey<FormState> _paymentFormKey = GlobalKey<FormState>();
   TextEditingController controller = TextEditingController(text: "");
 
+  AuthService authService = AuthService();
+
   final List<String> errors = [];
   String _countryCode = "+221";
   String otpCode;
   bool _loading = false;
+  bool _error = false;
 
   final spinkit = SpinKitRing(
     color: AppColors.greenDark.withOpacity(0.5),
@@ -105,7 +109,7 @@ class _PasswordUpdatePageState extends State<PasswordUpdatePage> {
                                       backgroundColor: Colors.white,
                                       appContext: context,
                                       length: 4,
-                                      obscureText: false,
+                                      obscureText: true,
                                       autoFocus: true,
                                       hintCharacter: '•',
                                       hintStyle: TextStyle(
@@ -118,31 +122,46 @@ class _PasswordUpdatePageState extends State<PasswordUpdatePage> {
                                         shape: PinCodeFieldShape.underline,
                                         borderWidth: 3.0,
                                         activeFillColor: Colors.white,
-                                        activeColor: AppColors.greenDark
-                                            .withOpacity(0.3),
+                                        activeColor: _error
+                                            ? Colors.red.withOpacity(0.6)
+                                            : AppColors.greenDark
+                                                .withOpacity(0.3),
                                         inactiveFillColor: Colors.white,
-                                        inactiveColor: AppColors.greenDark
-                                            .withOpacity(0.3),
+                                        inactiveColor: _error
+                                            ? Colors.red.withOpacity(0.6)
+                                            : AppColors.greenDark
+                                                .withOpacity(0.3),
                                         selectedFillColor: Colors.white,
-                                        selectedColor: AppColors.greenDark,
+                                        selectedColor: _error
+                                            ? Colors.red
+                                            : AppColors.greenDark,
                                       ),
-                                      cursorColor: Colors.black,
+                                      cursorColor: Colors.black26,
                                       animationDuration:
                                           Duration(milliseconds: 300),
-                                      enableActiveFill: true,
-                                      // errorAnimationController: errorController,
+
                                       // controller: textEditingController,
                                       keyboardType: TextInputType.number,
 
-                                      onCompleted: (value) {
+                                      onCompleted: (value) async {
                                         print("Completed");
                                         setState(() {
                                           otpCode = value;
                                         });
-                                        nextScreen(
-                                          context,
-                                          NewPasswordPage(),
-                                        );
+
+                                        final result = await authService
+                                            .verifyOTPCode(otpCode);
+
+                                        if (result) {
+                                          nextScreen(
+                                            context,
+                                            NewPasswordPage(),
+                                          );
+                                        } else {
+                                          setState(() {
+                                            _error = true;
+                                          });
+                                        }
                                       },
                                       // onTap: () {
                                       //   print("Pressed");

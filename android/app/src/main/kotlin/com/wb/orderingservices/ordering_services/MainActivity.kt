@@ -1,4 +1,4 @@
-package com.wb.orderingservices.ordering_services
+package com.rasool.omegacaisse
 
 import io.flutter.embedding.android.FlutterActivity
 

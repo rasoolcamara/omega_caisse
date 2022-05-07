@@ -3,14 +3,14 @@ import 'package:http/http.dart' as http;
 import 'package:ordering_services/constants/app_api.dart';
 
 class OMSNService {
-  Future<bool> payment(String phone) async {
+  Future<bool> payment(String phone, String code) async {
     final response = await http.post(
       Uri.parse('https://app.paydunya.com/api/v1/softpay/orange-money-senegal'),
       body: jsonEncode({
         "customer_name": "Omega Caisse",
-        "customer_email": "email",
+        "customer_email": "omegacaisse@omegacaisse.com",
         "phone_number": phone,
-        'authorization_code': "code",
+        'authorization_code': code,
         'invoice_token': invoiceToken,
       }),
       headers: <String, String>{

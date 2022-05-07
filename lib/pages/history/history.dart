@@ -4,10 +4,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:ordering_services/constants/app_api.dart';
 import 'package:ordering_services/constants/app_colors.dart';
+import 'package:ordering_services/database/database_helper.dart';
 import 'package:ordering_services/models/order.dart';
 import 'package:ordering_services/models/products.dart';
 import 'package:ordering_services/pages/history/transaction.dart';
+import 'package:ordering_services/services/order_service/order_service.dart';
 import 'package:ordering_services/utils/next_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -23,40 +26,9 @@ class _HistoryPageState extends State<HistoryPage> {
 
   final TextEditingController _searchController = TextEditingController();
 
-  List<Order> orders = [
-    Order(
-      id: 1,
-      ref: "Com-20220122-001",
-      date: "2022-01-22 21:34:98",
-      totalAmount: 15000,
-      products: [
-        Product(
-          id: 1,
-          name: 'Hamburger',
-          image:
-              'https://firebasestorage.googleapis.com/v0/b/dl-flutter-ui-challenges.appspot.com/o/food%2Fburger.jpg?alt=media',
-          price: 1500,
-          quantity: 2,
-        ),
-        Product(
-          id: 2,
-          name: 'Shawarma',
-          image:
-              'https://firebasestorage.googleapis.com/v0/b/dl-flutter-ui-challenges.appspot.com/o/food%2Fburger.jpg?alt=media',
-          price: 1500,
-          quantity: 1,
-        ),
-        Product(
-          id: 3,
-          name: 'Pizza',
-          image:
-              'https://firebasestorage.googleapis.com/v0/b/dl-flutter-ui-challenges.appspot.com/o/food%2Fburger.jpg?alt=media',
-          price: 3000,
-          quantity: 3,
-        ),
-      ],
-    )
-  ];
+  OrderService orderService = OrderService();
+
+  // List<Order> orders = [];
 
   final List<String> errors = [];
   String _countryCode = "+221";
@@ -70,6 +42,22 @@ class _HistoryPageState extends State<HistoryPage> {
     lineWidth: 10.0,
     size: 100.0,
   );
+
+  @override
+  void initState() {
+    super.initState();
+
+    // orderService.getOrders(userId).then(
+    //   ((value) {
+    //     orders = value;
+    //     setState(() {
+    //       _loading = false;
+    //     });
+    //   }),
+    // );
+
+    // print(orders.first.ref);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,35 +78,55 @@ class _HistoryPageState extends State<HistoryPage> {
         ),
         elevation: 0.0,
       ),
-      body: ListView(
-        children: <Widget>[
-          Stack(
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.all(5.0),
-                // height: _height,
-                width: double.infinity,
-                decoration: BoxDecoration(color: Colors.white),
-                child: Column(
-                  children: <Widget>[
-                    _search(
-                      context,
-                      orders,
-                    ),
-                    SizedBox(
-                      height: 16,
-                    ),
-                    _latestTransactions(
-                      context,
-                      _searching ? searchingTransactions : orders,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      body: _loading
+          ? spinkit
+          : FutureBuilder(
+              future: orderService.getOrders(userId),
+              builder: (_, snapshot) {
+                print("snapshot.data[0]");
+                print(snapshot.data);
+
+                if (snapshot.data != null) {
+                  print("snapshot.data[0]");
+                  print(snapshot.data);
+                  List<Order> orders = snapshot.data;
+
+                  return ListView(
+                    children: <Widget>[
+                      Stack(
+                        children: <Widget>[
+                          Container(
+                            padding: const EdgeInsets.all(5.0),
+                            // height: _height,
+                            width: double.infinity,
+                            decoration: BoxDecoration(color: Colors.white),
+                            child: Column(
+                              children: <Widget>[
+                                _search(
+                                  context,
+                                  orders,
+                                ),
+                                SizedBox(
+                                  height: 16,
+                                ),
+                                _latestTransactions(
+                                  context,
+                                  _searching ? searchingTransactions : orders,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                } else {
+                  return Center(
+                    child: spinkit,
+                  );
+                }
+              },
+            ),
     );
   }
 
@@ -351,7 +359,9 @@ class _HistoryPageState extends State<HistoryPage> {
                   ),
                 ),
                 Text(
-                  _formatDate(DateTime.parse(order.date)),
+                  _formatDate(
+                    DateTime.parse(order.date),
+                  ),
                   style: TextStyle(
                     fontSize: 14.0,
                     fontWeight: FontWeight.w300,

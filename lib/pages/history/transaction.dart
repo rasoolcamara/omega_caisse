@@ -1,7 +1,6 @@
 // ignore_for_file: prefer_const_constructors_in_immutables, prefer_const_constructors, prefer_const_literals_to_create_immutables, must_be_immutable
 
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +9,11 @@ import 'package:ordering_services/models/order.dart';
 import 'package:ordering_services/models/products.dart';
 import 'package:ordering_services/widget/button.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:async';
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:flutter/services.dart';
+import 'package:ordering_services/widget/printing_widget.dart';
+import 'package:path_provider/path_provider.dart';
 
 class OrderPage extends StatefulWidget {
   OrderPage({
@@ -23,7 +27,116 @@ class OrderPage extends StatefulWidget {
 }
 
 class _OrderPageState extends State<OrderPage> {
-  // final UserService userService = UserService();
+  BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
+
+  List<BluetoothDevice> _devices = [];
+  BluetoothDevice _device;
+  bool _connected = false;
+  String pathImage;
+  ReceiptPrinter receiptPrinter;
+
+  @override
+  void initState() {
+    super.initState();
+    initPlatformState();
+    initSavetoPath();
+    receiptPrinter = ReceiptPrinter();
+  }
+
+  initSavetoPath() async {
+    //read and write
+    //image max 300px X 300px
+    final filename = 'omega.png';
+    var bytes = await rootBundle.load("assets/omega.png");
+    String dir = (await getApplicationDocumentsDirectory()).path;
+    writeToFile(bytes, '$dir/$filename');
+    setState(() {
+      pathImage = '$dir/$filename';
+    });
+  }
+
+  Future<void> initPlatformState() async {
+    bool isConnected = await bluetooth.isConnected;
+    List<BluetoothDevice> devices = [];
+    try {
+      devices = await bluetooth.getBondedDevices();
+    } on PlatformException {
+      // TODO - Error
+    }
+
+    bluetooth.onStateChanged().listen((state) {
+      switch (state) {
+        case BlueThermalPrinter.CONNECTED:
+          setState(() {
+            _connected = true;
+            print("bluetooth device state: connected");
+          });
+          break;
+        case BlueThermalPrinter.DISCONNECTED:
+          setState(() {
+            _connected = false;
+            print("bluetooth device state: disconnected");
+          });
+          break;
+        case BlueThermalPrinter.DISCONNECT_REQUESTED:
+          setState(() {
+            _connected = false;
+            print("bluetooth device state: disconnect requested");
+          });
+          break;
+        case BlueThermalPrinter.STATE_TURNING_OFF:
+          setState(() {
+            _connected = false;
+            print("bluetooth device state: bluetooth turning off");
+          });
+          break;
+        case BlueThermalPrinter.STATE_OFF:
+          setState(() {
+            _connected = false;
+            print("bluetooth device state: bluetooth off");
+          });
+          break;
+        case BlueThermalPrinter.STATE_ON:
+          setState(() {
+            _connected = false;
+            print("bluetooth device state: bluetooth on");
+          });
+          break;
+        case BlueThermalPrinter.STATE_TURNING_ON:
+          setState(() {
+            _connected = false;
+            print("bluetooth device state: bluetooth turning on");
+          });
+          break;
+        case BlueThermalPrinter.ERROR:
+          setState(() {
+            _connected = false;
+            print("bluetooth device state: error");
+          });
+          break;
+        default:
+          print(state);
+          break;
+      }
+    });
+
+    if (!mounted) return;
+    setState(() {
+      print("On a des divices");
+      print(devices.length);
+      print(devices.first.name);
+      print(devices.last.name);
+
+      _device = devices.first;
+      _devices = devices;
+    });
+
+    if (isConnected) {
+      setState(() {
+        _connected = true;
+      });
+    }
+  }
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -127,7 +240,6 @@ class _OrderPageState extends State<OrderPage> {
                             right: 22.0,
                             top: 16.0,
                           ),
-                          
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,8 +275,11 @@ class _OrderPageState extends State<OrderPage> {
                                 physics: const NeverScrollableScrollPhysics(),
                                 itemCount: widget.order.products.length,
                                 itemBuilder: (BuildContext context, int index) {
-                                  Product product =
+                                  Map<String, dynamic> product =
                                       widget.order.products[index];
+                                  print('The product');
+                                  // print(widget.order.products["username"]);
+                                  print(product);
                                   return buildList(
                                     context,
                                     product,
@@ -207,7 +322,17 @@ class _OrderPageState extends State<OrderPage> {
                                       borderRadius: BorderRadius.circular(25),
                                     ),
                                     color: AppColors.greenDark,
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      if (_connected) {
+                                        receiptPrinter.order = widget.order;
+                                        receiptPrinter.printing(pathImage);
+                                      } else {
+                                        print("Printer don't _connected");
+                                        _connect();
+                                        receiptPrinter.order = widget.order;
+                                        receiptPrinter.printing(pathImage);
+                                      }
+                                    },
                                     child: Text(
                                       "Imprimer le reçu",
                                       style: TextStyle(
@@ -231,10 +356,79 @@ class _OrderPageState extends State<OrderPage> {
     );
   }
 
+  List<DropdownMenuItem<BluetoothDevice>> _getDeviceItems() {
+    List<DropdownMenuItem<BluetoothDevice>> items = [];
+    if (_devices.isEmpty) {
+      items.add(DropdownMenuItem(
+        child: Text('NONE'),
+      ));
+    } else {
+      _devices.forEach((device) {
+        items.add(DropdownMenuItem(
+          child: Text(device.name),
+          value: device,
+        ));
+      });
+    }
+    return items;
+  }
+
+  void _connect() {
+    if (_device == null) {
+      show(
+        "Pas d'imprimante trouvée !",
+        duration: Duration(seconds: 5),
+      );
+    } else {
+      bluetooth.isConnected.then((isConnected) {
+        if (!isConnected) {
+          bluetooth.connect(_device).catchError((error) {
+            setState(
+              () => _connected = false,
+            );
+          });
+          setState(
+            () => _connected = true,
+          );
+        }
+      });
+    }
+  }
+
+  void _disconnect() {
+    bluetooth.disconnect();
+    setState(() => _connected = false);
+  }
+
+//write to app path
+  Future<void> writeToFile(ByteData data, String path) {
+    final buffer = data.buffer;
+    return new File(path).writeAsBytes(
+        buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+  }
+
+  Future show(
+    String message, {
+    Duration duration: const Duration(seconds: 3),
+  }) async {
+    await new Future.delayed(new Duration(milliseconds: 100));
+    ScaffoldMessenger.of(context).showSnackBar(
+      new SnackBar(
+        content: new Text(
+          message,
+          style: new TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        duration: duration,
+      ),
+    );
+  }
+
   // History
   Widget buildList(
     BuildContext context,
-    Product product,
+    Map<String, dynamic> product,
     bool isTheLast,
   ) {
     return Container(
@@ -267,7 +461,7 @@ class _OrderPageState extends State<OrderPage> {
     );
   }
 
-  Widget _historyItem(BuildContext context, Product product) {
+  Widget _historyItem(BuildContext context, Map<String, dynamic> product) {
     return Container(
       height: 40,
       padding: EdgeInsets.only(
@@ -279,7 +473,7 @@ class _OrderPageState extends State<OrderPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
           Text(
-            product.name,
+            product['name'],
             style: TextStyle(
               fontSize: 14.0,
               fontWeight: FontWeight.w600,
@@ -287,7 +481,9 @@ class _OrderPageState extends State<OrderPage> {
             ),
           ),
           Text(
-            _formatCurrencyForList(product.price * product.quantity),
+            product["quantity"].toString() +
+                " x " +
+                _formatCurrencyForList(product['price']),
             style: TextStyle(
               fontSize: 14.0,
               fontWeight: FontWeight.w600,
@@ -316,40 +512,3 @@ String _formatCurrency(num amount) {
       NumberFormat.currency(locale: "fr-FR", symbol: "Fcfa", decimalDigits: 0);
   return f.format(amount);
 }
-
-
-/* 
-// Phone
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            left: 20.0,
-                            top: 25.0,
-                            bottom: 16,
-                          ),
-                        ),
-                        // Payment Method
-                        Padding(
-                          padding: const EdgeInsets.only(left: 5.0, right: 5.0),
-                          child: ListTile(
-                            title: Padding(
-                              padding: const EdgeInsets.only(bottom: 10.0),
-                              child: Text(
-                                "Montant",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: 14,
-                                  color: AppColors.greenDark,
-                                ),
-                              ),
-                            ),
-                            subtitle: Text(
-                              _formatCurrency(widget.order.totalAmount),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: AppColors.greenDark,
-                              ),
-                            ),
-                          ),
-                        ),
- */
