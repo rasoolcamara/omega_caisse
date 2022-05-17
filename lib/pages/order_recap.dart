@@ -301,7 +301,8 @@ class _OrderRecapState extends State<OrderRecap> {
       padding: EdgeInsets.only(top: 5.0, bottom: 5.0, left: 10.0, right: 1.0),
       child: ListTile(
         leading: CachedNetworkImage(
-          imageUrl: product.image ?? 'assets/logo-part/emoney.png',
+          imageUrl: "https://omega.dohappit.com/" + product.image ??
+              'assets/logo-part/emoney.png',
           imageBuilder: (BuildContext context, ImageProvider imageProvider) =>
               Container(
             height: 50,

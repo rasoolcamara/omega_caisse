@@ -103,7 +103,7 @@ class AuthService {
       await _prefs.setString("userName", user.name);
       await _prefs.setInt("userSubscription", user.suscription);
 
-      // await _prefs.setStringList(key, value);
+      await _prefs.setString("code", code);
 
       // user.setting = onlineSetting;
 

@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ordering_services/constants/app_api.dart';
+import 'package:ordering_services/pages/home/home.dart';
+import 'package:ordering_services/services/auth/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OMSNService {
   Future<bool> payment(String phone, String code) async {
@@ -24,9 +27,15 @@ class OMSNService {
     print(body);
 
     if (body['success'] == true) {
-      // await transactionService.newTransaction(
-      //     activeToken, customer, transaction);
-      // return body['message'];
+      SharedPreferences _prefs = await SharedPreferences.getInstance();
+      var code = _prefs.getString('code');
+      AuthService authService = AuthService();
+
+      final user = await authService.login(
+        userPhone,
+        code,
+      );
+
       return body['success'];
     } else {
       // return body['message'];

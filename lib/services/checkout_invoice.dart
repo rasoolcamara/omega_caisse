@@ -10,14 +10,18 @@ class PaydunyaService {
     final invoice = {
       "invoice": {
         "total_amount": 200, //totalAmount,
-        "description": "Paiment de $totalAmount dépuis Box App",
+        "description":
+            "Paiment de $totalAmount dépuis d'abonnement Omega Caisse",
       },
       "store": {
         "name": "Omega Caisse",
-        "phone": "775779393",
+        "phone": "+221786342370",
       },
       "custom_data": {
-        "transaction_form": "omega_caisse",
+        "phone": userPhone,
+      },
+      "actions": {
+        "callback_url": "https://omega.dohappit.com/api/call-back",
       }
     };
 

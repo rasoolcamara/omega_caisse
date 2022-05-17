@@ -440,6 +440,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                         _loading = false;
                                       });
                                       if (paymentResult == true) {
+                                        HomePage.of(context).setAppState();
                                         showDialog(
                                           context: context,
                                           builder: (BuildContext context) {
@@ -449,7 +450,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                                     BorderRadius.circular(20.0),
                                               ), //this right here
                                               child: Container(
-                                                height: 250,
+                                                height: 290,
                                                 width: 320,
                                                 child: Padding(
                                                   padding: const EdgeInsets.all(
@@ -487,7 +488,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                                         height: 24,
                                                       ),
                                                       Text(
-                                                        'Veuillez paiemennt a été initié veuillez finaliser sur votre téléphone!',
+                                                        'Votre paiement a été initié, veuillez finaliser sur votre téléphone!',
                                                         style: TextStyle(
                                                           fontFamily: "Roboto",
                                                           fontSize: 16.0,

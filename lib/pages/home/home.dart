@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:cron/cron.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:new_version/new_version.dart';
@@ -64,6 +65,10 @@ class _HomePageState extends State<HomePage> {
     size: 100.0,
   );
 
+  void setAppState() {
+    setState(() {});
+  }
+
   advancedStatusCheck(NewVersion newVersion) async {
     final status = await newVersion.getVersionStatus();
 
@@ -103,9 +108,20 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    super.initState();
-    // _read();
-    // _readAll();
+    final cron = Cron();
+
+    cron.schedule(Schedule.parse('* * * 1-5 */1 *'), () async {
+      print('Runs every Five seconds');
+      SharedPreferences _prefs = await SharedPreferences.getInstance();
+      var code = _prefs.getString('code');
+      AuthService authService = AuthService();
+
+      final user = await authService.login(
+        userPhone,
+        code,
+      );
+      setState(() {});
+    });
 
     print("userProfile");
     print(userProfile);
@@ -121,12 +137,12 @@ class _HomePageState extends State<HomePage> {
         (connectivityResult) {
           if (connectivityResult == ConnectivityResult.mobile ||
               connectivityResult == ConnectivityResult.wifi) {
-            final newVersion = NewVersion(
-              iOSId: 'com.rasool.omegacaisse',
-              androidId: 'com.rasool.omegacaisse',
-            );
+            // final newVersion = NewVersion(
+            //   iOSId: 'com.rasool.omegacaisse',
+            //   androidId: 'com.rasool.omegacaisse',
+            // );
 
-            advancedStatusCheck(newVersion);
+            // advancedStatusCheck(newVersion);
             setBalance();
             print("SALUT ");
 
@@ -255,10 +271,10 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Container(
-                height: MediaQuery.of(context).size.height / 5.2,
+                height: MediaQuery.of(context).size.height / 6.5,
                 width: MediaQuery.of(context).size.width / 1.5,
                 child: CachedNetworkImage(
-                  imageUrl: product.image,
+                  imageUrl: "https://omega.dohappit.com/" + product.image,
                   imageBuilder:
                       (BuildContext context, ImageProvider imageProvider) =>
                           Container(
@@ -582,36 +598,86 @@ class _HomePageState extends State<HomePage> {
         ),
         elevation: 0.0,
         leading: userSubscription != 0
-            ? Padding(
-                padding: EdgeInsets.only(
-                  left: 20.0,
-                ),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        fullscreenDialog: true,
-                        builder: (context) => AdminPage(),
-                      ),
-                    ).then(
-                      (value) {
-                        setState(() {
-                          if (userProfile == 2) {
-                            getUserTotal();
-                          } else if (userProfile == 3) {
-                            getTotal();
-                          }
-                        });
+            ? userSubscription == 2
+                ? Padding(
+                    padding: EdgeInsets.only(left: 15.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            fullscreenDialog: true,
+                            builder: (context) => AdminPage(),
+                          ),
+                        ).then(
+                          (value) {
+                            setState(() {
+                              if (userProfile == 2) {
+                                getUserTotal();
+                              } else if (userProfile == 3) {
+                                getTotal();
+                              }
+                            });
+                          },
+                        );
                       },
-                    );
-                  },
-                  child: Icon(
-                    Icons.person_outline_sharp,
-                    size: 26.0,
-                  ),
-                ),
-              )
+                      child: Stack(
+                        overflow: Overflow.visible,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(12),
+                            child: Icon(
+                              Icons.person_outline_sharp,
+                              size: 26.0,
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 15,
+                            right: -10,
+                            child: Container(
+                              height: 20,
+                              width: 20,
+                              child: Icon(
+                                Icons.info_rounded,
+                                size: 20.0,
+                                color: Colors.red,
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  )
+                : Padding(
+                    padding: EdgeInsets.only(
+                      left: 20.0,
+                    ),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            fullscreenDialog: true,
+                            builder: (context) => AdminPage(),
+                          ),
+                        ).then(
+                          (value) {
+                            setState(() {
+                              if (userProfile == 2) {
+                                getUserTotal();
+                              } else if (userProfile == 3) {
+                                getTotal();
+                              }
+                            });
+                          },
+                        );
+                      },
+                      child: Icon(
+                        Icons.person_outline_sharp,
+                        size: 26.0,
+                      ),
+                    ),
+                  )
             : Container(),
         actions: [
           total != 0

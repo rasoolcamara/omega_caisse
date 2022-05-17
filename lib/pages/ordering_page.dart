@@ -25,7 +25,7 @@ class _EcommerceFivePageState extends State<EcommerceFivePage> {
   ProductService productService = ProductService();
 
   bool _loading = false;
-  
+
   final spinkit = SpinKitRing(
     color: AppColors.greenDark.withOpacity(0.5),
     lineWidth: 10.0,
@@ -118,7 +118,7 @@ class _EcommerceFivePageState extends State<EcommerceFivePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               PNetworkImage(
-                product.image,
+                "https://omega.dohappit.com/" + product.image,
                 height: 80,
                 fit: BoxFit.fill,
               ),

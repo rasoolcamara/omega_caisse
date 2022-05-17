@@ -187,7 +187,7 @@ class _AdminPageState extends State<AdminPage> {
                                 )
                               : Container(),
                           // Paiement
-                          userProfile == 3
+                          userProfile == 3 && userSubscription != 1
                               ? InkWell(
                                   onTap: () {
                                     print("Paiement");
@@ -404,6 +404,18 @@ class _AdminPageState extends State<AdminPage> {
                                             fontWeight: FontWeight.w600,
                                             fontSize: 14,
                                             color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                      subtitle: Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 10.0),
+                                        child: Text(
+                                          "Veullez payer votre abonnement!",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w300,
+                                            fontSize: 11,
+                                            color: Colors.red,
                                           ),
                                         ),
                                       ),
