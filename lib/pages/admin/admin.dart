@@ -117,10 +117,10 @@ class _AdminPageState extends State<AdminPage> {
                                   ),
                                 ),
                                 subtitle: Text(
-                                  userPhone,
+                                  userAddress + "  -  " + userPhone,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w400,
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     color: Colors.black,
                                   ),
                                 ),
@@ -601,6 +601,9 @@ class _AdminPageState extends State<AdminPage> {
                                                           "userPhone", '');
                                                       await _prefs.setString(
                                                           "userName", '');
+                                                      await _prefs.setString(
+                                                          "userAddress", '');
+
                                                       Navigator.of(context)
                                                           .pop();
                                                       Navigator.of(context)

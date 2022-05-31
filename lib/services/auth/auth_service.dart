@@ -92,6 +92,7 @@ class AuthService {
       userPhone = user.phone;
       userProfile = user.profileId;
       userName = user.name;
+      userAddress = user.address;
       userSubscription = user.suscription;
       await getBalance(user.id);
 
@@ -101,6 +102,7 @@ class AuthService {
       await _prefs.setInt("profileId", user.profileId);
       await _prefs.setString("userPhone", user.phone);
       await _prefs.setString("userName", user.name);
+      await _prefs.setString("userAddress", user.address);
       await _prefs.setInt("userSubscription", user.suscription);
 
       await _prefs.setString("code", code);

@@ -56,6 +56,7 @@ class _HomePageState extends State<HomePage> {
   AuthService authService = AuthService();
   ProductService productService = ProductService();
   OrderService orderService = OrderService();
+  final TextEditingController _searchController = TextEditingController();
 
   bool _loading = true;
 
@@ -109,7 +110,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     final cron = Cron();
-
+    print(userAddress);
     cron.schedule(Schedule.parse('* * * 1-5 */1 *'), () async {
       print('Runs every Five seconds');
       SharedPreferences _prefs = await SharedPreferences.getInstance();
@@ -120,6 +121,7 @@ class _HomePageState extends State<HomePage> {
         userPhone,
         code,
       );
+
       setState(() {});
     });
 
@@ -166,19 +168,21 @@ class _HomePageState extends State<HomePage> {
 
   List<Product> products = [];
   List<Product> cartProducts = [];
-
+  bool _searching = false;
+  List<Product> searchingProducts = [];
   List<User> users = [];
 
   int value = 1;
   var total = 0;
 
-  Widget _productList(List<Product> products, context) {
+  Widget _productList(List<Product> prods, context) {
     return ListView(
       physics: NeverScrollableScrollPhysics(),
       children: <Widget>[
         SizedBox(
           height: 15.0,
         ),
+        products.length > 15 ? _search(context, products) : Container(),
         Container(
           padding: EdgeInsets.only(
             right: 15.0,
@@ -193,10 +197,10 @@ class _HomePageState extends State<HomePage> {
             mainAxisSpacing: 10.0,
             childAspectRatio: 0.71,
             children: List.generate(
-              products.length + 1,
+              prods.length + 1,
               (index) {
-                if (index < products.length) {
-                  Product product = products[index];
+                if (index < prods.length) {
+                  Product product = prods[index];
                   return _buildCard(product, context);
                 } else {
                   return cardNewProduct(
@@ -221,6 +225,10 @@ class _HomePageState extends State<HomePage> {
       ),
       child: InkWell(
         onTap: () {
+          setState(() {
+            _searching = false;
+            _searchController.clear();
+          });
           showModalBottomSheet(
             elevation: 10,
             backgroundColor: Colors.white,
@@ -440,7 +448,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ).then((value) {
             print("The Valmue");
-            print(pd);
+            print(pd.name);
             if (pd.name != null) {
               setState(() {
                 cartProducts.add(pd);
@@ -513,7 +521,7 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Container(
         // width: 220,
-        height: 100,
+        height: 80,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(Radius.circular(10.0)),
@@ -535,12 +543,14 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    userProfile == 3 ? "Votre Solde" : "Solde Globale",
-                    style: regularLightTextStyle(
-                      AppColors.greenDark,
-                    ),
-                  ),
+                  userProfile == 2
+                      ? Text(
+                          "Solde Globale",
+                          style: regularLightTextStyle(
+                            AppColors.greenDark,
+                          ),
+                        )
+                      : Container(),
                   SizedBox(
                     height: 16,
                   ),
@@ -549,7 +559,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Text(
                         hideBalance
-                            ? '••••••'
+                            ? "••••••"
                             : "${_formatCurrency(currentBalance)}",
                         style: bigBoldTextStyle(
                           AppColors.greenDark,
@@ -631,19 +641,21 @@ class _HomePageState extends State<HomePage> {
                               size: 26.0,
                             ),
                           ),
-                          Positioned(
-                            bottom: 15,
-                            right: -10,
-                            child: Container(
-                              height: 20,
-                              width: 20,
-                              child: Icon(
-                                Icons.info_rounded,
-                                size: 20.0,
-                                color: Colors.red,
-                              ),
-                            ),
-                          )
+                          userProfile == 3
+                              ? Positioned(
+                                  bottom: 15,
+                                  right: -10,
+                                  child: Container(
+                                    height: 20,
+                                    width: 20,
+                                    child: Icon(
+                                      Icons.info_rounded,
+                                      size: 20.0,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                )
+                              : Container(),
                         ],
                       ),
                     ),
@@ -1087,7 +1099,7 @@ class _HomePageState extends State<HomePage> {
                             Expanded(
                               child: userProfile == 3
                                   ? _productList(
-                                      products,
+                                      _searching ? searchingProducts : products,
                                       context,
                                     )
                                   : userProfile == 2
@@ -1365,6 +1377,92 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+    );
+  }
+
+  Padding _search(BuildContext context, List<Product> products) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        right: 16.0,
+        left: 16.0,
+        bottom: 16,
+      ),
+      child: Container(
+        height: 40.0,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(
+            Radius.circular(5.0),
+          ),
+          border: Border.all(
+            color: Colors.grey,
+            width: 1.0,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(
+            left: 20.0,
+          ),
+          child: Theme(
+            data: ThemeData(hintColor: Colors.transparent),
+            child: TextFormField(
+              controller: _searchController,
+              onChanged: (value) {
+                print(value);
+                setState(() {
+                  _searching = true;
+                  searchingProducts = products
+                      .where(
+                        (Product order) => order.name
+                            .toLowerCase()
+                            .contains(value.toLowerCase()),
+                      )
+                      .toList();
+                });
+              },
+              onFieldSubmitted: (value) => {},
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 13.0,
+                fontFamily: "Roboto",
+                fontWeight: FontWeight.w400,
+              ),
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.only(bottom: 8.0),
+                border: InputBorder.none,
+                icon: Icon(
+                  Icons.search,
+                  color: Colors.grey,
+                  size: 22.0,
+                ),
+                suffix: Padding(
+                  padding: const EdgeInsets.only(top: 10.0, bottom: 5),
+                  child: IconButton(
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {
+                        _searching = false;
+                      });
+                    },
+                    icon: Icon(
+                      Icons.clear,
+                      color: Colors.grey,
+                      size: 17.0,
+                    ),
+                  ),
+                ),
+                hintText: "Rechercher avec le numéro",
+                hintStyle: TextStyle(
+                  fontSize: 12.0,
+                  // color: gray.withOpacity(0.5),
+                  fontFamily: "Roboto",
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

@@ -665,9 +665,9 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 ),
                                 SizedBox(
-                                  height: 35.0,
+                                  height: 55.0,
                                 ),
-                                InkWell(
+                                /* InkWell(
                                   onTap: () {
                                     print("Contacter un de nos agents");
                                     launch("tel://+221786342370");
@@ -691,10 +691,7 @@ class _LoginPageState extends State<LoginPage> {
                                       ),
                                     ),
                                   ),
-                                ),
-                                SizedBox(
-                                  height: 45,
-                                ),
+                                ), */
                               ],
                             ),
                           ),

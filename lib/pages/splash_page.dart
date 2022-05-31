@@ -54,6 +54,7 @@ class _SplashScreenState extends State<SplashScreen>
       userId = prefs.getInt('userId');
 
       userName = prefs.getString('userName');
+      userAddress = prefs.getString('userAddress');
       userPhone = prefs.getString('userPhone');
       userProfile = prefs.getInt('profileId');
       userSubscription = prefs.getInt('userSubscription');

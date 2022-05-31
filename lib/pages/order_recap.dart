@@ -300,31 +300,46 @@ class _OrderRecapState extends State<OrderRecap> {
     return Padding(
       padding: EdgeInsets.only(top: 5.0, bottom: 5.0, left: 10.0, right: 1.0),
       child: ListTile(
-        leading: CachedNetworkImage(
-          imageUrl: "https://omega.dohappit.com/" + product.image ??
-              'assets/logo-part/emoney.png',
-          imageBuilder: (BuildContext context, ImageProvider imageProvider) =>
-              Container(
-            height: 50,
-            width: 50,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: imageProvider,
-                fit: BoxFit.fill,
+        leading: product.image != null
+            ? CachedNetworkImage(
+                imageUrl: "https://omega.dohappit.com/" + product.image,
+                imageBuilder:
+                    (BuildContext context, ImageProvider imageProvider) =>
+                        Container(
+                  height: 50,
+                  width: 50,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: imageProvider,
+                      fit: BoxFit.fill,
+                    ),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(5.0),
+                    ),
+                  ),
+                ),
+                placeholder: (context, url) => Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.lightBlue.shade100,
+                  ),
+                ),
+                errorWidget:
+                    (BuildContext context, String url, dynamic error) =>
+                        const Icon(Icons.error),
+              )
+            : Container(
+                height: 50,
+                width: 50,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/ocaisse.png'),
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(5.0),
+                  ),
+                ),
               ),
-              borderRadius: BorderRadius.all(
-                Radius.circular(5.0),
-              ),
-            ),
-          ),
-          placeholder: (context, url) => Center(
-            child: CircularProgressIndicator(
-              color: Colors.lightBlue.shade100,
-            ),
-          ),
-          errorWidget: (BuildContext context, String url, dynamic error) =>
-              const Icon(Icons.error),
-        ),
         title: Padding(
           padding: const EdgeInsets.only(
             top: 5.0,

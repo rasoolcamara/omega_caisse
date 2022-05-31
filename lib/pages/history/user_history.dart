@@ -170,59 +170,61 @@ class _UserHistoryPageState extends State<UserHistoryPage> {
       ),
       body: _loading
           ? spinkit
-          : FutureBuilder(
-              future: _initOrdersData,
-              builder: (_, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  // List<Order> orders = snapshot.data;
+          : SafeArea(
+              child: FutureBuilder(
+                future: _initOrdersData,
+                builder: (_, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    // List<Order> orders = snapshot.data;
 
-                  return RefreshIndicator(
-                    key: refreshkey,
-                    backgroundColor: Colors.white,
-                    // color: darkGreen,
-                    onRefresh: () => _refreshOrders(context),
-                    child: _loading
-                        ? spinkit
-                        : ListView(
-                            children: <Widget>[
-                              Stack(
-                                children: <Widget>[
-                                  Container(
-                                    padding: const EdgeInsets.all(5.0),
-                                    // height: _height,
-                                    width: double.infinity,
-                                    decoration:
-                                        BoxDecoration(color: Colors.white),
-                                    child: Column(
-                                      children: <Widget>[
-                                        _balanceWidget(context),
-                                        SizedBox(
-                                          height: 24,
-                                        ),
-                                        _filter(context, _orderList),
-                                        SizedBox(
-                                          height: 16,
-                                        ),
-                                        _latestTransactions(
-                                          context,
-                                          _searching
-                                              ? searchingTransactions
-                                              : _orderList,
-                                        ),
-                                      ],
+                    return RefreshIndicator(
+                      key: refreshkey,
+                      backgroundColor: Colors.white,
+                      // color: darkGreen,
+                      onRefresh: () => _refreshOrders(context),
+                      child: _loading
+                          ? spinkit
+                          : ListView(
+                              children: <Widget>[
+                                Stack(
+                                  children: <Widget>[
+                                    Container(
+                                      padding: const EdgeInsets.all(5.0),
+                                      // height: _height,
+                                      width: double.infinity,
+                                      decoration:
+                                          BoxDecoration(color: Colors.white),
+                                      child: Column(
+                                        children: <Widget>[
+                                          _balanceWidget(context),
+                                          SizedBox(
+                                            height: 24,
+                                          ),
+                                          _filter(context, _orderList),
+                                          SizedBox(
+                                            height: 16,
+                                          ),
+                                          _latestTransactions(
+                                            context,
+                                            _searching
+                                                ? searchingTransactions
+                                                : _orderList,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                  );
-                } else {
-                  return Center(
-                    child: spinkit,
-                  );
-                }
-              },
+                                  ],
+                                ),
+                              ],
+                            ),
+                    );
+                  } else {
+                    return Center(
+                      child: spinkit,
+                    );
+                  }
+                },
+              ),
             ),
     );
   }
@@ -244,6 +246,7 @@ class _UserHistoryPageState extends State<UserHistoryPage> {
       _orderList = orders;
       getTotal(_orderList);
       _loading = false;
+      _searching = false;
       _startDate = 'Date de debut';
       _endDate = 'Date de fin';
       _startDateSelected = false;
@@ -311,7 +314,7 @@ class _UserHistoryPageState extends State<UserHistoryPage> {
                     children: <Widget>[
                       Container(
                         height: 25.5,
-                        width: 100,
+                        width: MediaQuery.of(context).size.width / 4.5,
                         decoration: BoxDecoration(
                           color: Colors.transparent,
                           border: Border(
@@ -344,11 +347,11 @@ class _UserHistoryPageState extends State<UserHistoryPage> {
                         ),
                       ),
                       SizedBox(
-                        width: 25,
+                        width: 15,
                       ),
                       Container(
                         height: 25.5,
-                        width: 100,
+                        width: MediaQuery.of(context).size.width / 4.5,
                         decoration: BoxDecoration(
                           color: Colors.transparent,
                           border: Border(
@@ -701,7 +704,7 @@ class _UserHistoryPageState extends State<UserHistoryPage> {
       confirmText: "Confirmer",
       fieldHintText: "Saisissez la date",
       fieldLabelText: "Saisissez la date",
-      initialEntryMode: DatePickerEntryMode.input,
+      initialEntryMode: DatePickerEntryMode.calendarOnly,
       builder: (BuildContext context, Widget child) {
         return Theme(
           data: ThemeData.dark().copyWith(

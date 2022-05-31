@@ -23,14 +23,14 @@ class ReceiptPrinter {
 //     Uint8List bytes = response.bodyBytes;
     bluetooth.isConnected.then((isConnected) {
       if (isConnected) {
-        bluetooth.printNewLine();
         bluetooth.printCustom("RECU DE CAISSE", 3, 1);
         bluetooth.printNewLine();
         bluetooth.printLeftRight(userName, "", 1);
-        bluetooth.printLeftRight("Ouakam, Azur, Nord Foire", "", 1);
+        bluetooth.printLeftRight(userAddress, "", 1);
+        bluetooth.printLeftRight(userPhone, "", 1);
+        bluetooth.printNewLine();
         bluetooth.printLeftRight(date, "", 1);
         bluetooth.printCustom("================", 2, 0);
-        bluetooth.printNewLine();
         bluetooth.printNewLine();
         bluetooth.printLeftRight("Description", "Prix (fcfa)", 1,
             format: "%-15s %15s %n");
@@ -52,9 +52,6 @@ class ReceiptPrinter {
         bluetooth.printNewLine();
         bluetooth.printCustom(
             "OMEGA CAISSE +221 78 634 23 70 / +221 76 193 71 05", 0, 1);
-        bluetooth.printNewLine();
-        bluetooth.printNewLine();
-        bluetooth.printNewLine();
         bluetooth.printNewLine();
         bluetooth.printNewLine();
         bluetooth.paperCut();

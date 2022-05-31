@@ -14,6 +14,7 @@ int userSubscription;
 String userPhone;
 int userProfile;
 String userName;
+String userAddress;
 
 String appStoreUrl = "https://apps.apple.com/us/app/sendkwe/id1600051085";
 String playStoreUrl =
