@@ -66,9 +66,9 @@ class _HomePageState extends State<HomePage> {
     size: 100.0,
   );
 
-  void setAppState() {
-    setState(() {});
-  }
+  // void setAppState() {
+  //   setState(() {});
+  // }
 
   advancedStatusCheck(NewVersion newVersion) async {
     final status = await newVersion.getVersionStatus();
@@ -110,16 +110,38 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     final cron = Cron();
-    print(userAddress);
-    cron.schedule(Schedule.parse('* * * 1-5 */1 *'), () async {
-      print('Runs every Five seconds');
-      SharedPreferences _prefs = await SharedPreferences.getInstance();
-      var code = _prefs.getString('code');
-      AuthService authService = AuthService();
 
-      final user = await authService.login(
-        userPhone,
-        code,
+    cron.schedule(Schedule.parse('* * * 1-5 */1 *'), () async {
+      (Connectivity().checkConnectivity()).then(
+        (connectivityResult) async {
+          if (connectivityResult == ConnectivityResult.mobile ||
+              connectivityResult == ConnectivityResult.wifi) {
+            SharedPreferences _prefs = await SharedPreferences.getInstance();
+            var code = _prefs.getString('code');
+            AuthService authService = AuthService();
+
+            final user = await authService.login(
+              userPhone,
+              code,
+            );
+          } else {
+            var now = DateTime.now();
+            print("On Updates les données user");
+            if (now.day < 5) {
+              setState(() {
+                print("On Updates les données user 1111");
+
+                userSubscription = 2;
+              });
+            } else {
+              setState(() {
+                print("On Updates les données user 2222");
+
+                userSubscription = 0;
+              });
+            }
+          }
+        },
       );
 
       setState(() {});

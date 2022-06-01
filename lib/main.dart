@@ -1,13 +1,6 @@
 import 'dart:io';
-import 'package:cron/cron.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:ordering_services/constants/app_api.dart';
-import 'package:ordering_services/pages/auth/login.dart';
-import 'package:ordering_services/pages/home/home.dart';
 import 'package:ordering_services/pages/splash_page.dart';
-import 'package:ordering_services/services/auth/auth_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   HttpOverrides.global = MyHttpOverrides();
