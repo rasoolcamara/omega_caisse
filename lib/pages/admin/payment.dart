@@ -463,8 +463,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                               });
                                               final checkoutInvoice =
                                                   await paydunyaService
-                                                      .checkoutInvoice(
-                                                          200 /* 5000 */);
+                                                      .checkoutInvoice(5000);
                                               if (checkoutInvoice != null) {
                                                 var paymentResult = false;
 

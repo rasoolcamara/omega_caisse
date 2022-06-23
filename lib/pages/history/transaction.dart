@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors_in_immutables, prefer_const_constructors, prefer_const_literals_to_create_immutables, must_be_immutable
+// ignore_for_file: prefer_const_constructors_in_immutables, prefer_const_constructors, prefer_const_literals_to_create_immutables, must_be_immutable, deprecated_member_use
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -315,7 +315,7 @@ class _OrderPageState extends State<OrderPage> {
                               ),
                               Center(
                                 child: SizedBox(
-                                  width: 200,
+                                  width: 280,
                                   height: 50,
                                   child: FlatButton(
                                     shape: RoundedRectangleBorder(
@@ -376,8 +376,8 @@ class _OrderPageState extends State<OrderPage> {
   void _connect() {
     if (_device == null) {
       show(
-        "Pas d'imprimante trouvée !",
-        duration: Duration(seconds: 5),
+        "Aucune imprimante trouvée !",
+        duration: Duration(seconds: 8),
       );
     } else {
       bluetooth.isConnected.then((isConnected) {
@@ -414,11 +414,13 @@ class _OrderPageState extends State<OrderPage> {
     await new Future.delayed(new Duration(milliseconds: 100));
     ScaffoldMessenger.of(context).showSnackBar(
       new SnackBar(
-        content: new Text(
+        backgroundColor: AppColors.greenDark,
+        content: Text(
           message,
           style: new TextStyle(
             color: Colors.white,
           ),
+          textAlign: TextAlign.center,
         ),
         duration: duration,
       ),

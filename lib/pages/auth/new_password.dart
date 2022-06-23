@@ -47,7 +47,7 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
         backgroundColor: Colors.white,
         foregroundColor: AppColors.greenDark,
         title: Text(
-          "Modifier mon code secret",
+          "Modifier mon mot de passe",
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
@@ -78,7 +78,7 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                                   height: 45,
                                 ),
                                 Text(
-                                  "Définnir un code secret",
+                                  "Définir un mot de passe",
                                   style: TextStyle(
                                     fontFamily: "Roboto",
                                     fontSize: 20.0,

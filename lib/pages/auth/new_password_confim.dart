@@ -81,7 +81,7 @@ class _NewPasswordConfirmPageState extends State<NewPasswordConfirmPage> {
                                   height: 45,
                                 ),
                                 Text(
-                                  "Confirmer votre nouveau code secret",
+                                  "Confirmer votre nouveau mot de passe",
                                   style: TextStyle(
                                     fontFamily: "Roboto",
                                     fontSize: 20.0,

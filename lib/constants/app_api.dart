@@ -9,12 +9,15 @@ String invoiceUrl = '';
 String activeToken = '';
 String activeUserToken = '';
 
+bool offlineTooLong = false;
+
 int userId;
 int userSubscription;
 String userPhone;
 int userProfile;
 String userName;
 String userAddress;
+int categoryId;
 
 String appStoreUrl = "https://apps.apple.com/us/app/sendkwe/id1600051085";
 String playStoreUrl =

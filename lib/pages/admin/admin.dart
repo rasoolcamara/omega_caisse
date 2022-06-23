@@ -603,14 +603,16 @@ class _AdminPageState extends State<AdminPage> {
                                                           "userName", '');
                                                       await _prefs.setString(
                                                           "userAddress", '');
-
+                                                      await _prefs.setInt(
+                                                          "categoryId", 0);
                                                       Navigator.of(context)
                                                           .pop();
                                                       Navigator.of(context)
                                                           .pushReplacement(
-                                                        MaterialPageRoute(
-                                                          builder: (_) =>
-                                                              LoginPage(),
+                                                        PageRouteBuilder(
+                                                          pageBuilder:
+                                                              (_, __, ___) =>
+                                                                  LoginPage(),
                                                         ),
                                                       );
                                                     },

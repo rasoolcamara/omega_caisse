@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:async';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -66,10 +67,6 @@ class _HomePageState extends State<HomePage> {
     size: 100.0,
   );
 
-  // void setAppState() {
-  //   setState(() {});
-  // }
-
   advancedStatusCheck(NewVersion newVersion) async {
     final status = await newVersion.getVersionStatus();
 
@@ -102,6 +99,7 @@ class _HomePageState extends State<HomePage> {
           currentBalance = value;
         },
       );
+      offlineTooLong = false;
       getTotal();
     });
   }
@@ -180,6 +178,7 @@ class _HomePageState extends State<HomePage> {
             getOfflineProducts().then((value) {
               print("SALUT ");
               products = value;
+
               getTotal();
             });
           }
@@ -198,21 +197,52 @@ class _HomePageState extends State<HomePage> {
   var total = 0;
 
   Widget _productList(List<Product> prods, context) {
-    return ListView(
-      physics: NeverScrollableScrollPhysics(),
-      children: <Widget>[
-        SizedBox(
-          height: 15.0,
-        ),
-        products.length > 15 ? _search(context, products) : Container(),
-        Container(
-          padding: EdgeInsets.only(
-            right: 15.0,
-            bottom: _bottom,
-          ),
-          width: MediaQuery.of(context).size.width - 30.0,
-          height: MediaQuery.of(context).size.height,
-          child: GridView.count(
+    if (prods.length != 0 && prods.last.id != -1) {
+      prods.add(
+        Product(id: -1),
+      );
+    }
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        if (constraints.maxWidth > 600) {
+          return ListView(
+            // physics: NeverScrollableScrollPhysics(),
+            children: <Widget>[
+              SizedBox(
+                height: 15.0,
+              ),
+              products.length > 15 ? _search(context, products) : Container(),
+              Container(
+                padding: EdgeInsetsDirectional.only(
+                  // start: 4,
+                  top: 20,
+                  bottom: (cartProductCount == 0) ? 20 : 80,
+                ),
+                child: Wrap(
+                  runSpacing: 10,
+                  alignment: WrapAlignment.spaceBetween,
+                  children: prods.map((Product product) {
+                    print(prods.indexOf(product));
+                    if (product.id != -1) {
+                      return FractionallySizedBox(
+                        widthFactor: 0.3,
+                        child: Container(
+                          padding: const EdgeInsetsDirectional.only(end: 16),
+                          child: _buildCard(product, context),
+                        ),
+                      );
+                    } else {
+                      return FractionallySizedBox(
+                        widthFactor: 0.3,
+                        child: Container(
+                          padding: const EdgeInsetsDirectional.only(end: 16),
+                          child: cardNewProduct(context),
+                        ),
+                      );
+                    }
+                  }).toList(),
+                ),
+                /* GridView.count(
             crossAxisCount: 2,
             primary: false,
             crossAxisSpacing: 6.0,
@@ -231,9 +261,52 @@ class _HomePageState extends State<HomePage> {
                 }
               },
             ),
-          ),
-        ),
-      ],
+          ), */
+              ),
+            ],
+          );
+        } else {
+          return ListView(
+            // physics: NeverScrollableScrollPhysics(),
+            children: <Widget>[
+              SizedBox(
+                height: 15.0,
+              ),
+              products.length > 15 ? _search(context, products) : Container(),
+              Container(
+                padding: EdgeInsetsDirectional.only(
+                  // start: 4,
+                  top: 20,
+                  bottom: (cartProductCount == 0) ? 20 : 80,
+                ),
+                child: Wrap(
+                  runSpacing: 10,
+                  alignment: WrapAlignment.spaceBetween,
+                  children: prods.map((Product product) {
+                    if (product.id != -1) {
+                      return FractionallySizedBox(
+                        widthFactor: 0.5,
+                        child: Container(
+                          padding: const EdgeInsetsDirectional.only(end: 16),
+                          child: _buildCard(product, context),
+                        ),
+                      );
+                    } else {
+                      return FractionallySizedBox(
+                        widthFactor: 0.5,
+                        child: Container(
+                          padding: const EdgeInsetsDirectional.only(end: 16),
+                          child: cardNewProduct(context),
+                        ),
+                      );
+                    }
+                  }).toList(),
+                ),
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 
@@ -339,7 +412,7 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     SizedBox(
-                      height: 52.0,
+                      height: 60.0,
                       width: MediaQuery.of(context).size.width,
                       child: Padding(
                         padding: EdgeInsets.only(
@@ -378,12 +451,12 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     SizedBox(
-                      height: 48.0,
+                      height: 55.0,
                       width: MediaQuery.of(context).size.width,
                       child: Padding(
                         padding: EdgeInsets.only(
-                          bottom: 5.0,
-                          top: 12.0,
+                          bottom: 8.0,
+                          top: 8.0,
                         ),
                         child: AutoSizeText(
                           _formatCurrency(product.price.toInt()),
@@ -484,7 +557,7 @@ class _HomePageState extends State<HomePage> {
           });
         },
         child: Container(
-          height: 100,
+          height: (MediaQuery.of(context).size.height / 6.5) + 127.0,
           width: 50,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.all(
@@ -814,16 +887,16 @@ class _HomePageState extends State<HomePage> {
           : SafeArea(
               child: Stack(
                 children: <Widget>[
-                  userSubscription == 0
+                  offlineTooLong
                       ? Dialog(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20.0),
                           ), //this right here
                           child: Container(
-                            height: 350,
+                            height: 200,
                             width: 320,
                             child: Padding(
-                              padding: const EdgeInsets.all(12.0),
+                              padding: const EdgeInsets.all(8.0),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -840,7 +913,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   Center(
                                     child: Text(
-                                      "Votre abonnement a expiré, veuillez procéder au paiement des 5.000 FCFA!",
+                                      "Une connexion à internet est requise pour la synchronisation des données!",
                                       style: TextStyle(
                                         fontFamily: "Roboto",
                                         fontSize: 16.0,
@@ -850,289 +923,340 @@ class _HomePageState extends State<HomePage> {
                                       textAlign: TextAlign.center,
                                     ),
                                   ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          top: 24.0,
-                                          right: 0,
-                                          left: 0,
-                                        ),
-                                        child: FlatButton(
-                                          onPressed: () async {
-                                            // Navigator.of(context).pop();
-                                            showModalBottomSheet(
-                                              isScrollControlled: true,
-                                              backgroundColor:
-                                                  Colors.transparent,
-                                              context: context,
-                                              builder: (context) {
-                                                return Container(
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white,
-                                                    borderRadius:
-                                                        BorderRadius.only(
-                                                      topRight:
-                                                          Radius.circular(24),
-                                                      topLeft:
-                                                          Radius.circular(24),
-                                                    ),
-                                                  ),
-                                                  width: MediaQuery.of(context)
-                                                      .size
-                                                      .width,
-                                                  height: 250,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                      top: 40,
-                                                    ),
-                                                    child: Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: <Widget>[
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                            left: 40,
-                                                            bottom: 20.0,
-                                                          ),
-                                                          child: Text(
-                                                            "Payer votre abonnement de 5.000 FCFA avec :",
-                                                            style: TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w400,
-                                                              fontSize: 14,
-                                                              color:
-                                                                  Colors.black,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            InkWell(
-                                                              onTap: () {
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .pop();
-
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .push(
-                                                                  PageRouteBuilder(
-                                                                    pageBuilder: (_,
-                                                                            __,
-                                                                            ___) =>
-                                                                        PaymentPage(
-                                                                      wallet: 1,
-                                                                    ),
-                                                                  ),
-                                                                );
-                                                              },
-                                                              child: Material(
-                                                                elevation: 5,
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .all(
-                                                                  Radius
-                                                                      .circular(
-                                                                          50),
-                                                                ),
-                                                                child:
-                                                                    Container(
-                                                                  height: 85,
-                                                                  width: 85,
-                                                                  decoration:
-                                                                      BoxDecoration(
-                                                                    color: Colors
-                                                                        .white,
-                                                                    borderRadius:
-                                                                        BorderRadius
-                                                                            .all(
-                                                                      Radius.circular(
-                                                                          50),
-                                                                    ),
-                                                                    boxShadow: [
-                                                                      BoxShadow(
-                                                                        color: AppColors
-                                                                            .greenDark
-                                                                            .withOpacity(0.1),
-                                                                        blurRadius:
-                                                                            4.0,
-                                                                        spreadRadius:
-                                                                            0.0,
-                                                                        offset: Offset(
-                                                                            0.0,
-                                                                            0.0),
-                                                                      )
-                                                                    ],
-                                                                  ),
-                                                                  child:
-                                                                      Padding(
-                                                                    padding:
-                                                                        const EdgeInsets.all(
-                                                                            5.0),
-                                                                    child:
-                                                                        Image(
-                                                                      image:
-                                                                          AssetImage(
-                                                                        "assets/logo-part/orange-money.png",
-                                                                      ),
-                                                                      fit: BoxFit
-                                                                          .cover,
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            SizedBox(
-                                                              width: 40.0,
-                                                            ),
-                                                            InkWell(
-                                                              onTap: () {
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .pop();
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .push(
-                                                                  PageRouteBuilder(
-                                                                    pageBuilder: (_,
-                                                                            __,
-                                                                            ___) =>
-                                                                        PaymentPage(
-                                                                      wallet: 2,
-                                                                    ),
-                                                                  ),
-                                                                );
-                                                              },
-                                                              child: Material(
-                                                                elevation: 5,
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .all(
-                                                                  Radius
-                                                                      .circular(
-                                                                          50),
-                                                                ),
-                                                                child:
-                                                                    Container(
-                                                                  height: 85,
-                                                                  width: 85,
-                                                                  decoration:
-                                                                      BoxDecoration(
-                                                                    color: Colors
-                                                                        .white,
-                                                                    borderRadius:
-                                                                        BorderRadius
-                                                                            .all(
-                                                                      Radius.circular(
-                                                                          50),
-                                                                    ),
-                                                                    boxShadow: [
-                                                                      BoxShadow(
-                                                                        color: AppColors
-                                                                            .greenDark
-                                                                            .withOpacity(0.1),
-                                                                        blurRadius:
-                                                                            4.0,
-                                                                        spreadRadius:
-                                                                            0.0,
-                                                                        offset: Offset(
-                                                                            0.0,
-                                                                            0.0),
-                                                                      )
-                                                                    ],
-                                                                  ),
-                                                                  child:
-                                                                      Padding(
-                                                                    padding:
-                                                                        const EdgeInsets.all(
-                                                                            5.0),
-                                                                    child:
-                                                                        Image(
-                                                                      image:
-                                                                          AssetImage(
-                                                                        "assets/logo-part/wave.png",
-                                                                      ),
-                                                                      fit: BoxFit
-                                                                          .cover,
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            );
-                                          },
-                                          child: Container(
-                                            padding: EdgeInsets.all(10.0),
-                                            height: 40.5,
-                                            width: 180,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(5.0),
-                                              color: Colors.red.withOpacity(.3),
-                                            ),
-                                            child: Center(
-                                              child: Text(
-                                                "Payer maintenant",
-                                                style: TextStyle(
-                                                  fontSize: 14.0,
-                                                  color: Colors.red,
-                                                  fontWeight: FontWeight.w400,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 ],
                               ),
                             ),
                           ),
                         )
-                      : Column(
-                          children: <Widget>[
-                            _balanceWidget(context),
-                            Expanded(
-                              child: userProfile == 3
-                                  ? _productList(
-                                      _searching ? searchingProducts : products,
-                                      context,
-                                    )
-                                  : userProfile == 2
-                                      ? _userList(
-                                          users,
+                      : userSubscription == 0
+                          ? Dialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20.0),
+                              ), //this right here
+                              child: Container(
+                                height: 350,
+                                width: 320,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Align(
+                                        child: Icon(
+                                          Icons.warning_amber_rounded,
+                                          color: Colors.red,
+                                          size: 64,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 16,
+                                      ),
+                                      Center(
+                                        child: Text(
+                                          "Votre abonnement a expiré, veuillez procéder au paiement des 5.000 FCFA!",
+                                          style: TextStyle(
+                                            fontFamily: "Roboto",
+                                            fontSize: 16.0,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.black,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 24.0,
+                                              right: 0,
+                                              left: 0,
+                                            ),
+                                            child: FlatButton(
+                                              onPressed: () async {
+                                                // Navigator.of(context).pop();
+                                                showModalBottomSheet(
+                                                  isScrollControlled: true,
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                  context: context,
+                                                  builder: (context) {
+                                                    return Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white,
+                                                        borderRadius:
+                                                            BorderRadius.only(
+                                                          topRight:
+                                                              Radius.circular(
+                                                                  24),
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                  24),
+                                                        ),
+                                                      ),
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .width,
+                                                      height: 250,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(
+                                                          top: 40,
+                                                        ),
+                                                        child: Column(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .start,
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: <Widget>[
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                left: 40,
+                                                                bottom: 20.0,
+                                                              ),
+                                                              child: Text(
+                                                                "Payer votre abonnement de 5.000 FCFA avec :",
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w400,
+                                                                  fontSize: 14,
+                                                                  color: Colors
+                                                                      .black,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            Row(
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .center,
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                InkWell(
+                                                                  onTap: () {
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .pop();
+
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .push(
+                                                                      PageRouteBuilder(
+                                                                        pageBuilder: (_,
+                                                                                __,
+                                                                                ___) =>
+                                                                            PaymentPage(
+                                                                          wallet:
+                                                                              1,
+                                                                        ),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                  child:
+                                                                      Material(
+                                                                    elevation:
+                                                                        5,
+                                                                    borderRadius:
+                                                                        BorderRadius
+                                                                            .all(
+                                                                      Radius.circular(
+                                                                          50),
+                                                                    ),
+                                                                    child:
+                                                                        Container(
+                                                                      height:
+                                                                          85,
+                                                                      width: 85,
+                                                                      decoration:
+                                                                          BoxDecoration(
+                                                                        color: Colors
+                                                                            .white,
+                                                                        borderRadius:
+                                                                            BorderRadius.all(
+                                                                          Radius.circular(
+                                                                              50),
+                                                                        ),
+                                                                        boxShadow: [
+                                                                          BoxShadow(
+                                                                            color:
+                                                                                AppColors.greenDark.withOpacity(0.1),
+                                                                            blurRadius:
+                                                                                4.0,
+                                                                            spreadRadius:
+                                                                                0.0,
+                                                                            offset:
+                                                                                Offset(0.0, 0.0),
+                                                                          )
+                                                                        ],
+                                                                      ),
+                                                                      child:
+                                                                          Padding(
+                                                                        padding:
+                                                                            const EdgeInsets.all(5.0),
+                                                                        child:
+                                                                            Image(
+                                                                          image:
+                                                                              AssetImage(
+                                                                            "assets/logo-part/orange-money.png",
+                                                                          ),
+                                                                          fit: BoxFit
+                                                                              .cover,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                SizedBox(
+                                                                  width: 40.0,
+                                                                ),
+                                                                InkWell(
+                                                                  onTap: () {
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .pop();
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .push(
+                                                                      PageRouteBuilder(
+                                                                        pageBuilder: (_,
+                                                                                __,
+                                                                                ___) =>
+                                                                            PaymentPage(
+                                                                          wallet:
+                                                                              2,
+                                                                        ),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                  child:
+                                                                      Material(
+                                                                    elevation:
+                                                                        5,
+                                                                    borderRadius:
+                                                                        BorderRadius
+                                                                            .all(
+                                                                      Radius.circular(
+                                                                          50),
+                                                                    ),
+                                                                    child:
+                                                                        Container(
+                                                                      height:
+                                                                          85,
+                                                                      width: 85,
+                                                                      decoration:
+                                                                          BoxDecoration(
+                                                                        color: Colors
+                                                                            .white,
+                                                                        borderRadius:
+                                                                            BorderRadius.all(
+                                                                          Radius.circular(
+                                                                              50),
+                                                                        ),
+                                                                        boxShadow: [
+                                                                          BoxShadow(
+                                                                            color:
+                                                                                AppColors.greenDark.withOpacity(0.1),
+                                                                            blurRadius:
+                                                                                4.0,
+                                                                            spreadRadius:
+                                                                                0.0,
+                                                                            offset:
+                                                                                Offset(0.0, 0.0),
+                                                                          )
+                                                                        ],
+                                                                      ),
+                                                                      child:
+                                                                          Padding(
+                                                                        padding:
+                                                                            const EdgeInsets.all(5.0),
+                                                                        child:
+                                                                            Image(
+                                                                          image:
+                                                                              AssetImage(
+                                                                            "assets/logo-part/wave.png",
+                                                                          ),
+                                                                          fit: BoxFit
+                                                                              .cover,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.all(10.0),
+                                                height: 40.5,
+                                                width: 180,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5.0),
+                                                  color: Colors.red
+                                                      .withOpacity(.3),
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    "Payer maintenant",
+                                                    style: TextStyle(
+                                                      fontSize: 14.0,
+                                                      color: Colors.red,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Column(
+                              children: <Widget>[
+                                _balanceWidget(context),
+                                Expanded(
+                                  child: userProfile == 3
+                                      ? _productList(
+                                          _searching
+                                              ? searchingProducts
+                                              : products,
                                           context,
                                         )
-                                      : Container(),
+                                      : userProfile == 2
+                                          ? _userList(
+                                              users,
+                                              context,
+                                            )
+                                          : Container(),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
                   productAddToCart
                       ? Align(
                           alignment: Alignment.bottomCenter,
@@ -1177,10 +1301,12 @@ class _HomePageState extends State<HomePage> {
                                           fontWeight: FontWeight.w400,
                                           color: AppColors.greenDark,
                                           fontSize: 12,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 SizedBox(
                                   width:
@@ -1802,13 +1928,34 @@ class _HomePageState extends State<HomePage> {
       var endDay = DateTime.parse(endDate);
       return date.isAfter(startDay) && date.isBefore(endDay);
     }).toList();
+
     orders.forEach((order) {
       bal += order.totalAmount;
     });
+
     print("bal");
     print(bal);
     setState(() {
       currentBalance = bal;
+      if (orders != null && orders.length > 500) {
+        setState(() {
+          offlineTooLong = true;
+        });
+        Timer.periodic(Duration(seconds: 1), (timer) async {
+          print("periodic periodic");
+          (Connectivity().checkConnectivity()).then(
+            (connectivityResult) {
+              if (connectivityResult == ConnectivityResult.mobile ||
+                  connectivityResult == ConnectivityResult.wifi) {
+                setState(() {
+                  setBalance();
+                });
+                timer.cancel();
+              }
+            },
+          );
+        });
+      }
     });
   }
 

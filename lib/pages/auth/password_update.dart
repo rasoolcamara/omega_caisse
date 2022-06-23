@@ -53,7 +53,7 @@ class _PasswordUpdatePageState extends State<PasswordUpdatePage> {
         backgroundColor: Colors.white,
         foregroundColor: AppColors.greenDark,
         title: Text(
-          "Modifier mon code secret",
+          "Modifier mon Mot de passe",
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
@@ -84,7 +84,7 @@ class _PasswordUpdatePageState extends State<PasswordUpdatePage> {
                                   height: 45,
                                 ),
                                 Text(
-                                  "Saisissez le code secret actuel",
+                                  "Saisissez le mot de passe actuel",
                                   style: TextStyle(
                                     fontFamily: "Roboto",
                                     fontSize: 20.0,
@@ -111,6 +111,7 @@ class _PasswordUpdatePageState extends State<PasswordUpdatePage> {
                                       length: 4,
                                       obscureText: true,
                                       autoFocus: true,
+                                      obscuringCharacter: '•',
                                       hintCharacter: '•',
                                       hintStyle: TextStyle(
                                         fontSize: 32,

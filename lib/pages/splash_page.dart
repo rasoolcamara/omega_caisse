@@ -58,9 +58,11 @@ class _SplashScreenState extends State<SplashScreen>
       userPhone = prefs.getString('userPhone');
       userProfile = prefs.getInt('profileId');
       userSubscription = prefs.getInt('userSubscription');
+      categoryId = prefs.getInt("categoryId");
       print('Le userPhone');
       print(userProfile);
-
+      print("categoryId");
+      print(categoryId);
       print('Le userSubscription');
       print(userSubscription);
 

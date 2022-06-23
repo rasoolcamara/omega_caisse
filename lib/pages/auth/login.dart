@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors_in_immutables, prefer_const_constructors, prefer_const_literals_to_create_immutables, deprecated_member_use
 
 import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:ordering_services/constants/app_colors.dart';
@@ -41,6 +42,13 @@ class _LoginPageState extends State<LoginPage> {
     double _height = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.greenDark,
+        elevation: 0.0,
+      ),
       body: _loading
           ? Center(
               child: Column(
@@ -221,7 +229,7 @@ class _LoginPageState extends State<LoginPage> {
                                         CrossAxisAlignment.start,
                                     children: <Widget>[
                                       Text(
-                                        "Code secret",
+                                        "Mot de passe",
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w400,
@@ -264,9 +272,11 @@ class _LoginPageState extends State<LoginPage> {
                                                 autocorrect: false,
                                                 autofocus: false,
                                                 obscureText: true,
+                                                maxLength: 4,
                                                 controller: _passwordController,
                                                 decoration: InputDecoration(
                                                   border: InputBorder.none,
+                                                  counterText: '',
                                                   contentPadding:
                                                       EdgeInsets.only(
                                                     left: 20.0,
@@ -274,7 +284,7 @@ class _LoginPageState extends State<LoginPage> {
                                                   ),
                                                   filled: true,
                                                   fillColor: Colors.transparent,
-                                                  labelText: 'Code secret',
+                                                  labelText: 'Mot de passe',
                                                   floatingLabelBehavior:
                                                       FloatingLabelBehavior
                                                           .never,
@@ -310,7 +320,7 @@ class _LoginPageState extends State<LoginPage> {
                                         CrossAxisAlignment.start,
                                     children: <Widget>[
                                       Text(
-                                        "Code secret",
+                                        "Mot de passe",
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w400,
@@ -402,243 +412,388 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                   child: FlatButton(
                                     onPressed: () async {
-                                      if (_phoneController.text.isEmpty ||
-                                          _passwordController.text.isEmpty) {
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            return Dialog(
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20.0),
-                                              ), //this right here
-                                              child: Container(
-                                                height: 250,
-                                                width: 320,
-                                                child: Padding(
-                                                  padding: const EdgeInsets.all(
-                                                      12.0),
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Align(
-                                                        child: Icon(
-                                                          Icons
-                                                              .warning_amber_rounded,
-                                                          color: Colors.red,
-                                                          size: 40,
-                                                        ),
-                                                      ),
-                                                      SizedBox(
-                                                        height: 16,
-                                                      ),
-                                                      Center(
-                                                        child: Text(
-                                                          "Les champs sont obligatoires!",
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                "Roboto",
-                                                            fontSize: 16.0,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                            color: Colors.black,
-                                                          ),
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                        ),
-                                                      ),
-                                                      Align(
-                                                        child: Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                            top: 26.0,
-                                                          ),
-                                                          child: FlatButton(
-                                                            onPressed:
-                                                                () async {
-                                                              Navigator.of(
-                                                                      context)
-                                                                  .pop();
-                                                            },
-                                                            child: Container(
-                                                              padding:
-                                                                  EdgeInsets
-                                                                      .all(
-                                                                          10.0),
-                                                              height: 40.5,
-                                                              width: 120,
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            5.0),
-                                                                color: Colors
-                                                                    .red
-                                                                    .withOpacity(
-                                                                        .2),
+                                      (Connectivity().checkConnectivity()).then(
+                                        (connectivityResult) async {
+                                          if (connectivityResult ==
+                                                  ConnectivityResult.mobile ||
+                                              connectivityResult ==
+                                                  ConnectivityResult.wifi) {
+                                            if (_phoneController.text.isEmpty ||
+                                                _passwordController
+                                                    .text.isEmpty) {
+                                              showDialog(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return Dialog(
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20.0),
+                                                    ), //this right here
+                                                    child: Container(
+                                                      height: 250,
+                                                      width: 320,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(12.0),
+                                                        child: Column(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Align(
+                                                              child: Icon(
+                                                                Icons
+                                                                    .warning_amber_rounded,
+                                                                color:
+                                                                    Colors.red,
+                                                                size: 40,
                                                               ),
-                                                              child: Center(
-                                                                child: Text(
-                                                                  "OK",
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontSize:
-                                                                        14.0,
-                                                                    color: Colors
-                                                                        .red,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .w600,
+                                                            ),
+                                                            SizedBox(
+                                                              height: 16,
+                                                            ),
+                                                            Center(
+                                                              child: Text(
+                                                                "Les champs sont obligatoires!",
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontFamily:
+                                                                      "Roboto",
+                                                                  fontSize:
+                                                                      16.0,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  color: Colors
+                                                                      .black,
+                                                                ),
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                              ),
+                                                            ),
+                                                            Align(
+                                                              child: Padding(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .only(
+                                                                  top: 26.0,
+                                                                ),
+                                                                child:
+                                                                    FlatButton(
+                                                                  onPressed:
+                                                                      () async {
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .pop();
+                                                                  },
+                                                                  child:
+                                                                      Container(
+                                                                    padding:
+                                                                        EdgeInsets.all(
+                                                                            10.0),
+                                                                    height:
+                                                                        40.5,
+                                                                    width: 120,
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              5.0),
+                                                                      color: Colors
+                                                                          .red
+                                                                          .withOpacity(
+                                                                              .2),
+                                                                    ),
+                                                                    child:
+                                                                        Center(
+                                                                      child:
+                                                                          Text(
+                                                                        "OK",
+                                                                        style:
+                                                                            TextStyle(
+                                                                          fontSize:
+                                                                              14.0,
+                                                                          color:
+                                                                              Colors.red,
+                                                                          fontWeight:
+                                                                              FontWeight.w600,
+                                                                        ),
+                                                                      ),
+                                                                    ),
                                                                   ),
                                                                 ),
                                                               ),
                                                             ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            } else {
+                                              setState(() {
+                                                _loading = true;
+                                              });
+                                              final user =
+                                                  await authService.login(
+                                                _phoneController.text,
+                                                _passwordController.text,
+                                              );
+                                              setState(() {
+                                                _loading = false;
+                                              });
+                                              if (user != null) {
+                                                print(
+                                                    "Athentification Réussi!");
+                                                print(user.toString());
+                                                Navigator.of(context)
+                                                    .pushReplacement(
+                                                  PageRouteBuilder(
+                                                    pageBuilder: (_, __, ___) =>
+                                                        HomePage(),
+                                                  ),
+                                                );
+                                              } else {
+                                                showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (BuildContext context) {
+                                                    return Dialog(
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(20.0),
+                                                      ), //this right here
+                                                      child: Container(
+                                                        height: 300,
+                                                        width: 320,
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(12.0),
+                                                          child: Column(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .center,
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Align(
+                                                                child: Icon(
+                                                                  Icons
+                                                                      .warning_amber_rounded,
+                                                                  color: Colors
+                                                                      .red,
+                                                                  size: 40,
+                                                                ),
+                                                              ),
+                                                              SizedBox(
+                                                                height: 16,
+                                                              ),
+                                                              Text(
+                                                                'Veuillez vérifier les données saisies!',
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontFamily:
+                                                                      "Roboto",
+                                                                  fontSize:
+                                                                      16.0,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  color: Colors
+                                                                      .black,
+                                                                ),
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                              ),
+                                                              Align(
+                                                                child: Padding(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .only(
+                                                                    top: 26.0,
+                                                                  ),
+                                                                  child:
+                                                                      FlatButton(
+                                                                    onPressed:
+                                                                        () async {
+                                                                      Navigator.of(
+                                                                              context)
+                                                                          .pop();
+                                                                    },
+                                                                    child:
+                                                                        Container(
+                                                                      padding:
+                                                                          EdgeInsets.all(
+                                                                              10.0),
+                                                                      height:
+                                                                          40.5,
+                                                                      width:
+                                                                          120,
+                                                                      decoration:
+                                                                          BoxDecoration(
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(5.0),
+                                                                        color: Colors
+                                                                            .red
+                                                                            .withOpacity(.2),
+                                                                      ),
+                                                                      child:
+                                                                          Center(
+                                                                        child:
+                                                                            Text(
+                                                                          "OK",
+                                                                          style:
+                                                                              TextStyle(
+                                                                            fontSize:
+                                                                                14.0,
+                                                                            color:
+                                                                                Colors.red,
+                                                                            fontWeight:
+                                                                                FontWeight.w600,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
                                                           ),
                                                         ),
                                                       ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        );
-                                      } else {
-                                        setState(() {
-                                          _loading = true;
-                                        });
-                                        final user = await authService.login(
-                                          _phoneController.text,
-                                          _passwordController.text,
-                                        );
-                                        setState(() {
-                                          _loading = false;
-                                        });
-                                        if (user != null) {
-                                          print("Athentification Réussi!");
-                                          print(user.toString());
-                                          Navigator.of(context).pushReplacement(
-                                            PageRouteBuilder(
-                                              pageBuilder: (_, __, ___) =>
-                                                  HomePage(),
-                                            ),
-                                          );
-                                        } else {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return Dialog(
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          20.0),
-                                                ), //this right here
-                                                child: Container(
-                                                  height: 200,
-                                                  width: 320,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            12.0),
-                                                    child: Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Align(
-                                                          child: Icon(
-                                                            Icons
-                                                                .warning_amber_rounded,
-                                                            color: Colors.red,
-                                                            size: 40,
-                                                          ),
-                                                        ),
-                                                        SizedBox(
-                                                          height: 16,
-                                                        ),
-                                                        Text(
-                                                          'Veuillez vérifier les données saisies!',
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                "Roboto",
-                                                            fontSize: 16.0,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                            color: Colors.black,
-                                                          ),
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                        ),
-                                                        Align(
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                              top: 26.0,
+                                                    );
+                                                  },
+                                                );
+                                              }
+                                            }
+                                          } else {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return Dialog(
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20.0),
+                                                  ), //this right here
+                                                  child: Container(
+                                                    height: 250,
+                                                    width: 320,
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              12.0),
+                                                      child: Column(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Align(
+                                                            child: Icon(
+                                                              Icons
+                                                                  .warning_amber_rounded,
+                                                              color: Colors.red,
+                                                              size: 40,
                                                             ),
-                                                            child: FlatButton(
-                                                              onPressed:
-                                                                  () async {
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .pop();
-                                                              },
-                                                              child: Container(
-                                                                padding:
-                                                                    EdgeInsets
-                                                                        .all(
-                                                                            10.0),
-                                                                height: 40.5,
-                                                                width: 120,
-                                                                decoration:
-                                                                    BoxDecoration(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              5.0),
-                                                                  color: Colors
-                                                                      .red
-                                                                      .withOpacity(
-                                                                          .2),
-                                                                ),
-                                                                child: Center(
-                                                                  child: Text(
-                                                                    "OK",
-                                                                    style:
-                                                                        TextStyle(
-                                                                      fontSize:
-                                                                          14.0,
-                                                                      color: Colors
-                                                                          .red,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w600,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 16,
+                                                          ),
+                                                          Center(
+                                                            child: Text(
+                                                              "La connexion à internet est obligatoire pour se connecter!",
+                                                              style: TextStyle(
+                                                                fontFamily:
+                                                                    "Roboto",
+                                                                fontSize: 16.0,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                color: Colors
+                                                                    .black,
+                                                              ),
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                            ),
+                                                          ),
+                                                          Align(
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                top: 26.0,
+                                                              ),
+                                                              child: FlatButton(
+                                                                onPressed:
+                                                                    () async {
+                                                                  Navigator.of(
+                                                                          context)
+                                                                      .pop();
+                                                                },
+                                                                child:
+                                                                    Container(
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .all(
+                                                                              10.0),
+                                                                  height: 40.5,
+                                                                  width: 120,
+                                                                  decoration:
+                                                                      BoxDecoration(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            5.0),
+                                                                    color: Colors
+                                                                        .red
+                                                                        .withOpacity(
+                                                                            .2),
+                                                                  ),
+                                                                  child: Center(
+                                                                    child: Text(
+                                                                      "OK",
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            14.0,
+                                                                        color: Colors
+                                                                            .red,
+                                                                        fontWeight:
+                                                                            FontWeight.w600,
+                                                                      ),
                                                                     ),
                                                                   ),
                                                                 ),
                                                               ),
                                                             ),
                                                           ),
-                                                        ),
-                                                      ],
+                                                        ],
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        }
-                                      }
+                                                );
+                                              },
+                                            );
+                                          }
+                                        },
+                                      );
                                     },
                                     child: Padding(
                                       padding: const EdgeInsets.all(1.0),

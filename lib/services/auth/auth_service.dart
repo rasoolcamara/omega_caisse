@@ -77,13 +77,13 @@ class AuthService {
     );
 
     var body = jsonDecode(res.body);
-    print("3RESPONCES");
-    print(body);
+
     if (body['success'] == true) {
       var usr = body['data'];
       activeToken = usr['token'];
-      print(usr['data']);
 
+      print("3RESPONCES");
+      print(usr['category_id']);
       SharedPreferences _prefs = await SharedPreferences.getInstance();
 
       User user = User.fromJson(usr);
@@ -94,6 +94,8 @@ class AuthService {
       userName = user.name;
       userAddress = user.address;
       userSubscription = user.suscription;
+      categoryId = user.categoryId;
+
       await getBalance(user.id);
 
       await _prefs.setString("activeToken", activeToken);
@@ -104,7 +106,7 @@ class AuthService {
       await _prefs.setString("userName", user.name);
       await _prefs.setString("userAddress", user.address);
       await _prefs.setInt("userSubscription", user.suscription);
-
+      await _prefs.setInt("categoryId", user.categoryId);
       await _prefs.setString("code", code);
 
       // user.setting = onlineSetting;
