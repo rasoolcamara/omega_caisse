@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.rasool.omegacaisse">
+    package="com.omegatech.omegacaisse">
    <application
         android:label="Omega Caisse"
         android:icon="@mipmap/ic_launcher">

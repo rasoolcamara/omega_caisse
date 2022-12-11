@@ -384,3 +384,4 @@ class NewProductPageState extends State<NewProductPage> {
     );
   }
 }
+

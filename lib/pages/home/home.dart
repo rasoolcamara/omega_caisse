@@ -160,8 +160,8 @@ class _HomePageState extends State<HomePage> {
           if (connectivityResult == ConnectivityResult.mobile ||
               connectivityResult == ConnectivityResult.wifi) {
             // final newVersion = NewVersion(
-            //   iOSId: 'com.rasool.omegacaisse',
-            //   androidId: 'com.rasool.omegacaisse',
+            //   iOSId: 'com.omegatech.omegacaisse',
+            //   androidId: 'com.omegatech.omegacaisse',
             // );
 
             // advancedStatusCheck(newVersion);

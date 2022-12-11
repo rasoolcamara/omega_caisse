@@ -1,4 +1,4 @@
-package com.rasool.omegacaisse
+package com.omegatech.omegacaisse
 
 import io.flutter.embedding.android.FlutterActivity
 
