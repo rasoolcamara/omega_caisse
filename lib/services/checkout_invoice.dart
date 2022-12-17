@@ -33,9 +33,9 @@ class PaydunyaService {
       body: jsonEncode(invoice),
       headers: <String, String>{
         "Content-Type": "application/json",
-        "PAYDUNYA-MASTER-KEY": paydunyaMasterKey,
-        "PAYDUNYA-PRIVATE-KEY": paydunyaPrivateKey,
-        'PAYDUNYA-TOKEN': paydunyaToken
+        "PAYDUNYA-MASTER-KEY": "paydunyaMasterKey",
+        "PAYDUNYA-PRIVATE-KEY": "paydunyaPrivateKey",
+        'PAYDUNYA-TOKEN': "paydunyaToken"
       },
     );
 

@@ -13,6 +13,7 @@ import 'package:ordering_services/constants/app_api.dart';
 import 'package:ordering_services/constants/app_colors.dart';
 import 'package:ordering_services/constants/app_text.dart';
 import 'package:ordering_services/database/database_helper.dart';
+import 'package:ordering_services/models/app_setting.dart';
 import 'package:ordering_services/models/order.dart';
 import 'package:ordering_services/models/products.dart';
 import 'package:ordering_services/models/user.dart';
@@ -26,6 +27,7 @@ import 'package:ordering_services/pages/ordering_page.dart';
 import 'package:ordering_services/services/auth/auth_service.dart';
 import 'package:ordering_services/services/order_service/order_service.dart';
 import 'package:ordering_services/services/product_service/product_service.dart';
+import 'package:ordering_services/services/softPay/wave.dart';
 import 'package:ordering_services/utils/next_screen.dart';
 import 'package:ordering_services/widget/button.dart';
 import 'package:ordering_services/widget/network_image.dart';
@@ -33,6 +35,10 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({
@@ -58,8 +64,15 @@ class _HomePageState extends State<HomePage> {
   ProductService productService = ProductService();
   OrderService orderService = OrderService();
   final TextEditingController _searchController = TextEditingController();
+  final WaveService waveService = WaveService();
 
   bool _loading = true;
+
+  bool _paymentLoading = false;
+
+  bool payed = false;
+
+  int _timer = 1;
 
   final spinkit = SpinKitRing(
     color: AppColors.greenDark.withOpacity(0.5),
@@ -67,27 +80,207 @@ class _HomePageState extends State<HomePage> {
     size: 100.0,
   );
 
-  advancedStatusCheck(NewVersion newVersion) async {
-    final status = await newVersion.getVersionStatus();
+  Future show(
+    String message, {
+    Duration duration: const Duration(seconds: 3),
+  }) async {
+    await new Future.delayed(new Duration(milliseconds: 100));
+    ScaffoldMessenger.of(context).showSnackBar(
+      new SnackBar(
+        backgroundColor: AppColors.green,
+        content: new Text(
+          message,
+          style: new TextStyle(
+            color: AppColors.greenDark,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        duration: duration,
+      ),
+    );
+  }
 
-    if (status != null) {
-      debugPrint(status.releaseNotes);
-      debugPrint(status.appStoreLink);
-      debugPrint(status.localVersion);
-      debugPrint(status.storeVersion);
-      debugPrint(status.canUpdate.toString());
+  bool canUpdate(PackageInfo packageInfo, AppSetting appSetting) {
+    print("packageInfo.version");
+    print(packageInfo.version);
 
-      if (status.canUpdate) {
-        newVersion.showUpdateDialog(
-          context: context,
-          versionStatus: status,
-          dialogTitle: 'Nouvelle Version',
-          dialogText:
-              'Une nouvelle version de Omega Caisse est dispoible. Veuillez télécharger la nouvelle version!',
-          updateButtonText: 'Mettre à jour',
-          dismissButtonText: 'Plus tard',
-        );
+    final local = packageInfo.version.split('.').map(int.parse).toList();
+    final store = appSetting.currentVersion.split('.').map(int.parse).toList();
+
+    // Each consecutive field in the version notation is less significant than the previous one,
+    // therefore only one comparison needs to yield `true` for it to be determined that the store
+    // version is greater than the local version.
+    for (var i = 0; i < store.length; i++) {
+      // The store version field is newer than the local version.
+      if (store[i] > local[i]) {
+        return true;
       }
+
+      // The local version field is newer than the store version.
+      if (local[i] > store[i]) {
+        return false;
+      }
+    }
+
+    // The local and store versions are the same.
+    return false;
+  }
+
+  versionStatusCheck() async {
+    AppSetting appVersion = await ProductService().getAppSetting();
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    NewVersion();
+    String appName = packageInfo.appName;
+    String packageName = packageInfo.packageName;
+    String version = packageInfo.version;
+    String buildNumber = packageInfo.buildNumber;
+
+    print("canUpdate");
+    bool canUpdateApp =
+        appVersion != null ? canUpdate(packageInfo, appVersion) : true;
+    print(canUpdateApp);
+    if (canUpdateApp) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Material(
+            type: MaterialType.transparency,
+            child: Container(
+              alignment: Alignment.center,
+              child: Container(
+                margin: const EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15.0),
+                  color: Colors.white,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    SizedBox(
+                      height: ScreenUtil().setHeight(10),
+                    ),
+                    Icon(
+                      Icons.check_circle_outline_rounded,
+                      color: AppColors.green,
+                      size: 50,
+                    ),
+                    SizedBox(
+                      height: ScreenUtil().setHeight(10),
+                    ),
+                    Text(
+                      "NOUVELLE VERSION!",
+                      style: TextStyle(
+                        fontSize: ScreenUtil().setSp(14),
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    Divider(),
+                    Text(
+                      "Une nouvelle version de OMEGA CAISSE est disponible. Veuillez procéder à la mise à jour!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: ScreenUtil().setSp(12),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    SizedBox(
+                      height: ScreenUtil().setHeight(40),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: ScreenUtil().setWidth(130),
+                          child: FlatButton(
+                            splashColor: Colors.white,
+                            highlightColor: Colors.white,
+                            hoverColor: Colors.white,
+                            focusColor: Colors.white,
+                            child: Container(
+                              padding: EdgeInsets.all(10.0),
+                              height: ScreenUtil().setHeight(40.5),
+                              // width: 150,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5.0),
+                                color: AppColors.red.withOpacity(0.08),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  "Plus tard",
+                                  style: TextStyle(
+                                    fontSize: ScreenUtil().setSp(12),
+                                    color: AppColors.red,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            onPressed: () async {
+                              Navigator.pop(
+                                context,
+                                true,
+                              );
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: ScreenUtil().setWidth(150),
+                          child: FlatButton(
+                            splashColor: Colors.white,
+                            highlightColor: Colors.white,
+                            hoverColor: Colors.white,
+                            focusColor: Colors.white,
+                            child: Container(
+                              padding: EdgeInsets.all(10.0),
+                              height: ScreenUtil().setHeight(40.5),
+                              // width: 150,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5.0),
+                                color: AppColors.green.withOpacity(0.4),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  "Mettre à jour",
+                                  style: TextStyle(
+                                    fontSize: ScreenUtil().setSp(12),
+                                    color: AppColors.greenDark,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            onPressed: () async {
+                              print("On appelle le callback");
+                              if (await canLaunch(playStoreUrl)) {
+                                await launch(playStoreUrl);
+                              } else {
+                                show(
+                                  "Nous ne parvennons pas à ouvrir Play Store!",
+                                  duration: Duration(seconds: 5),
+                                );
+                              }
+
+                              Navigator.pop(
+                                context,
+                                true,
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
     }
   }
 
@@ -143,6 +336,24 @@ class _HomePageState extends State<HomePage> {
       );
 
       setState(() {});
+    });
+
+    (Connectivity().checkConnectivity()).then((connectivityResult) async {
+      if (connectivityResult == ConnectivityResult.mobile ||
+          connectivityResult == ConnectivityResult.wifi) {
+        if (connectivityResult == ConnectivityResult.mobile ||
+            connectivityResult == ConnectivityResult.wifi) {
+          try {
+            print('gfqhdfw');
+            versionStatusCheck();
+
+            print('advancedStatusCheck');
+          } catch (e) {
+            print("errorrrrrr");
+            print(e);
+          }
+        }
+      }
     });
 
     print("userProfile");
@@ -329,8 +540,8 @@ class _HomePageState extends State<HomePage> {
             backgroundColor: Colors.white,
             context: context,
             builder: (ctx) => Container(
-              width: 300,
-              height: 270,
+              width: ScreenUtil().setWidth(300),
+              height: ScreenUtil().setHeight(270),
               color: Colors.white54,
               alignment: Alignment.center,
               child: ProductSelect(
@@ -412,7 +623,7 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     SizedBox(
-                      height: 60.0,
+                      height: ScreenUtil().setHeight(60.0),
                       width: MediaQuery.of(context).size.width,
                       child: Padding(
                         padding: EdgeInsets.only(
@@ -423,7 +634,7 @@ class _HomePageState extends State<HomePage> {
                           product.name,
                           maxLines: 2,
                           maxFontSize: 15,
-                          minFontSize: 15,
+                          minFontSize: 14,
                           textScaleFactor: 1.5,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
@@ -431,7 +642,7 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.w600,
                             color: AppColors.greenDark,
                             decoration: TextDecoration.none,
-                            fontSize: 14.5,
+                            fontSize: ScreenUtil().setSp(14.5),
                             letterSpacing: 1.0,
                             wordSpacing: 1.0,
                           ),
@@ -451,7 +662,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     SizedBox(
-                      height: 55.0,
+                      height: ScreenUtil().setHeight(55.0),
                       width: MediaQuery.of(context).size.width,
                       child: Padding(
                         padding: EdgeInsets.only(
@@ -462,7 +673,7 @@ class _HomePageState extends State<HomePage> {
                           _formatCurrency(product.price.toInt()),
                           maxLines: 2,
                           maxFontSize: 15,
-                          minFontSize: 15,
+                          minFontSize: 14,
                           textScaleFactor: 1.0,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
@@ -470,48 +681,13 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.w600,
                             color: AppColors.greenDark,
                             decoration: TextDecoration.none,
-                            fontSize: 14.5,
+                            fontSize: ScreenUtil().setSp(14.5),
                             letterSpacing: 1.0,
                             wordSpacing: 1.0,
                           ),
-                        ), /* Text(
-                            _formatCurrency(product.price.toInt()),
-                            textScaleFactor: 1.0,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.greenDark,
-                              decoration: TextDecoration.none,
-                              fontSize: 14.5,
-                            ),
-                            textAlign: TextAlign.center,
-                          ), */
+                        ),
                       ),
                     ),
-                    /* product.quantity != 0
-                        ? SizedBox(
-                            height: 30.0,
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                bottom: 5.0,
-                                top: 5.0,
-                              ),
-                              child: FittedBox(
-                                fit: BoxFit.fill,
-                                child: Text(
-                                  "(${product.quantity})",
-                                  textScaleFactor: 1.0,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.greenDark,
-                                    decoration: TextDecoration.none,
-                                    fontSize: 12,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                          )
-                        : Container(), */
                   ],
                 ),
               ),
@@ -558,7 +734,7 @@ class _HomePageState extends State<HomePage> {
         },
         child: Container(
           height: (MediaQuery.of(context).size.height / 6.5) + 127.0,
-          width: 50,
+          width: ScreenUtil().setWidth(50),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.all(
               Radius.circular(5.0),
@@ -616,7 +792,7 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Container(
         // width: 220,
-        height: 80,
+        height: ScreenUtil().setHeight(80),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(Radius.circular(10.0)),
@@ -647,7 +823,7 @@ class _HomePageState extends State<HomePage> {
                         )
                       : Container(),
                   SizedBox(
-                    height: 16,
+                    height: ScreenUtil().setHeight(16),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -703,7 +879,7 @@ class _HomePageState extends State<HomePage> {
         ),
         elevation: 0.0,
         leading: userSubscription != 0
-            ? userSubscription == 2
+            ? userSubscription == 2 && paymentIsOn == 1
                 ? Padding(
                     padding: EdgeInsets.only(left: 15.0),
                     child: GestureDetector(
@@ -741,8 +917,8 @@ class _HomePageState extends State<HomePage> {
                                   bottom: 15,
                                   right: -10,
                                   child: Container(
-                                    height: 20,
-                                    width: 20,
+                                    height: ScreenUtil().setHeight(20),
+                                    width: ScreenUtil().setWidth(20),
                                     child: Icon(
                                       Icons.info_rounded,
                                       size: 20.0,
@@ -851,8 +1027,8 @@ class _HomePageState extends State<HomePage> {
                           top: 5,
                           right: 1,
                           child: Container(
-                            height: 20,
-                            width: 20,
+                            height: ScreenUtil().setHeight(20),
+                            width: ScreenUtil().setWidth(20),
                             decoration: BoxDecoration(
                               color: AppColors.greenDark,
                               shape: BoxShape.circle,
@@ -866,7 +1042,7 @@ class _HomePageState extends State<HomePage> {
                                 "$cartProductCount",
                                 style: TextStyle(
                                   fontSize: 10,
-                                  height: 1,
+                                  height: ScreenUtil().setHeight(1),
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
                                 ),
@@ -893,8 +1069,8 @@ class _HomePageState extends State<HomePage> {
                             borderRadius: BorderRadius.circular(20.0),
                           ), //this right here
                           child: Container(
-                            height: 200,
-                            width: 320,
+                            height: ScreenUtil().setHeight(200),
+                            width: ScreenUtil().setWidth(320),
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Column(
@@ -909,14 +1085,14 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                   SizedBox(
-                                    height: 16,
+                                    height: ScreenUtil().setHeight(16),
                                   ),
                                   Center(
                                     child: Text(
                                       "Une connexion à internet est requise pour la synchronisation des données!",
                                       style: TextStyle(
                                         fontFamily: "Roboto",
-                                        fontSize: 16.0,
+                                        fontSize: ScreenUtil().setSp(16.0),
                                         fontWeight: FontWeight.w600,
                                         color: Colors.black,
                                       ),
@@ -934,8 +1110,8 @@ class _HomePageState extends State<HomePage> {
                                 borderRadius: BorderRadius.circular(20.0),
                               ), //this right here
                               child: Container(
-                                height: 350,
-                                width: 320,
+                                height: ScreenUtil().setHeight(350),
+                                width: ScreenUtil().setWidth(320),
                                 child: Padding(
                                   padding: const EdgeInsets.all(12.0),
                                   child: Column(
@@ -951,14 +1127,14 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                       SizedBox(
-                                        height: 16,
+                                        height: ScreenUtil().setHeight(16),
                                       ),
                                       Center(
                                         child: Text(
                                           "Votre abonnement a expiré, veuillez procéder au paiement des 5.000 FCFA!",
                                           style: TextStyle(
                                             fontFamily: "Roboto",
-                                            fontSize: 16.0,
+                                            fontSize: ScreenUtil().setSp(16.0),
                                             fontWeight: FontWeight.w600,
                                             color: Colors.black,
                                           ),
@@ -1003,7 +1179,8 @@ class _HomePageState extends State<HomePage> {
                                                           MediaQuery.of(context)
                                                               .size
                                                               .width,
-                                                      height: 250,
+                                                      height: ScreenUtil()
+                                                          .setHeight(250),
                                                       child: Padding(
                                                         padding:
                                                             const EdgeInsets
@@ -1032,7 +1209,10 @@ class _HomePageState extends State<HomePage> {
                                                                   fontWeight:
                                                                       FontWeight
                                                                           .w400,
-                                                                  fontSize: 14,
+                                                                  fontSize:
+                                                                      ScreenUtil()
+                                                                          .setSp(
+                                                                              14.0),
                                                                   color: Colors
                                                                       .black,
                                                                 ),
@@ -1047,23 +1227,239 @@ class _HomePageState extends State<HomePage> {
                                                                       .start,
                                                               children: [
                                                                 InkWell(
-                                                                  onTap: () {
-                                                                    Navigator.of(
-                                                                            context)
-                                                                        .pop();
+                                                                  onTap:
+                                                                      () async {
+                                                                    (Connectivity()
+                                                                            .checkConnectivity())
+                                                                        .then(
+                                                                      (connectivityResult) async {
+                                                                        if (connectivityResult == ConnectivityResult.mobile ||
+                                                                            connectivityResult ==
+                                                                                ConnectivityResult.wifi) {
+                                                                          setState(
+                                                                              () {
+                                                                            _loading =
+                                                                                true;
+                                                                          });
+                                                                          var paymentResult =
+                                                                              await waveService.payment();
 
-                                                                    Navigator.of(
-                                                                            context)
-                                                                        .push(
-                                                                      PageRouteBuilder(
-                                                                        pageBuilder: (_,
-                                                                                __,
-                                                                                ___) =>
-                                                                            PaymentPage(
-                                                                          wallet:
-                                                                              1,
-                                                                        ),
-                                                                      ),
+                                                                          if (paymentResult ==
+                                                                              true) {
+                                                                            // HomePage.of(context).setAppState();
+                                                                            setState(() {
+                                                                              _loading = false;
+                                                                            });
+                                                                            launch(waveLaunchUrl,
+                                                                                forceSafariVC: false);
+
+                                                                            setState(() {
+                                                                              _paymentLoading = true;
+                                                                            });
+                                                                            Timer.periodic(Duration(seconds: 5),
+                                                                                (timer) async {
+                                                                              print('Runs every Five seconds');
+                                                                              print("object");
+                                                                              setState(() {
+                                                                                _timer++;
+                                                                              });
+                                                                              SharedPreferences _prefs = await SharedPreferences.getInstance();
+                                                                              var code = _prefs.getString('code');
+                                                                              AuthService authService = AuthService();
+
+                                                                              final user = await authService.login(
+                                                                                userPhone,
+                                                                                code,
+                                                                              );
+
+                                                                              if (user.suscription == 1) {
+                                                                                setState(() {
+                                                                                  _paymentLoading = false;
+                                                                                });
+                                                                                timer.cancel();
+                                                                                print('Runs CANCELLED');
+                                                                                print(DateTime.now());
+                                                                                Navigator.of(context).pushReplacement(
+                                                                                  MaterialPageRoute(
+                                                                                    builder: (_) => HomePage(),
+                                                                                  ),
+                                                                                );
+                                                                                print(DateTime.now());
+                                                                              } else {
+                                                                                if (_timer == 59) {
+                                                                                  print("afterr");
+                                                                                  timer.cancel();
+
+                                                                                  setState(() {
+                                                                                    _paymentLoading = false;
+                                                                                    _timer = 0;
+                                                                                  });
+                                                                                }
+                                                                              }
+                                                                            });
+                                                                          } else {
+                                                                            print("Un problème est survenu!");
+                                                                            setState(() {
+                                                                              _loading = false;
+                                                                            });
+                                                                            showDialog(
+                                                                              context: context,
+                                                                              builder: (BuildContext context) {
+                                                                                return Dialog(
+                                                                                  shape: RoundedRectangleBorder(
+                                                                                    borderRadius: BorderRadius.circular(20.0),
+                                                                                  ), //this right here
+                                                                                  child: Container(
+                                                                                    height: ScreenUtil().setHeight(240),
+                                                                                    width: ScreenUtil().setWidth(320),
+                                                                                    child: Padding(
+                                                                                      padding: const EdgeInsets.all(12.0),
+                                                                                      child: Column(
+                                                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                        children: [
+                                                                                          Align(
+                                                                                            child: Icon(
+                                                                                              Icons.warning_amber_rounded,
+                                                                                              color: Colors.red,
+                                                                                              size: 40,
+                                                                                            ),
+                                                                                          ),
+                                                                                          SizedBox(
+                                                                                            height: ScreenUtil().setHeight(16),
+                                                                                          ),
+                                                                                          Text(
+                                                                                            "Assurez-vous d'avoir saisi un numéro valable et ayant assez de fonds!",
+                                                                                            style: TextStyle(
+                                                                                              fontFamily: "Roboto",
+                                                                                              fontSize: ScreenUtil().setSp(16.0),
+                                                                                              fontWeight: FontWeight.w600,
+                                                                                              color: Colors.black,
+                                                                                            ),
+                                                                                            textAlign: TextAlign.center,
+                                                                                          ),
+                                                                                          Align(
+                                                                                            child: Padding(
+                                                                                              padding: const EdgeInsets.only(
+                                                                                                top: 26.0,
+                                                                                              ),
+                                                                                              child: FlatButton(
+                                                                                                onPressed: () async {
+                                                                                                  Navigator.of(context).pop();
+                                                                                                },
+                                                                                                child: Container(
+                                                                                                  padding: EdgeInsets.all(10.0),
+                                                                                                  height: ScreenUtil().setHeight(40.5),
+                                                                                                  width: ScreenUtil().setWidth(120),
+                                                                                                  decoration: BoxDecoration(
+                                                                                                    borderRadius: BorderRadius.circular(5.0),
+                                                                                                    color: Colors.red.shade50,
+                                                                                                  ),
+                                                                                                  child: Center(
+                                                                                                    child: Text(
+                                                                                                      "OK",
+                                                                                                      style: TextStyle(
+                                                                                                        fontSize: ScreenUtil().setSp(14.0),
+                                                                                                        color: Colors.red,
+                                                                                                        fontWeight: FontWeight.w600,
+                                                                                                      ),
+                                                                                                    ),
+                                                                                                  ),
+                                                                                                ),
+                                                                                              ),
+                                                                                            ),
+                                                                                          ),
+                                                                                        ],
+                                                                                      ),
+                                                                                    ),
+                                                                                  ),
+                                                                                );
+                                                                              },
+                                                                            );
+                                                                          }
+                                                                        } else {
+                                                                          print(
+                                                                              "Un problème est survenu!");
+                                                                          showDialog(
+                                                                            context:
+                                                                                context,
+                                                                            builder:
+                                                                                (BuildContext context) {
+                                                                              return Dialog(
+                                                                                shape: RoundedRectangleBorder(
+                                                                                  borderRadius: BorderRadius.circular(20.0),
+                                                                                ), //this right here
+                                                                                child: Container(
+                                                                                  height: ScreenUtil().setHeight(200),
+                                                                                  width: ScreenUtil().setWidth(320),
+                                                                                  child: Padding(
+                                                                                    padding: const EdgeInsets.all(12.0),
+                                                                                    child: Column(
+                                                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                      children: [
+                                                                                        Align(
+                                                                                          child: Icon(
+                                                                                            Icons.warning_amber_rounded,
+                                                                                            color: Colors.red,
+                                                                                            size: 40,
+                                                                                          ),
+                                                                                        ),
+                                                                                        SizedBox(
+                                                                                          height: ScreenUtil().setHeight(16),
+                                                                                        ),
+                                                                                        Center(
+                                                                                          child: Text(
+                                                                                            'Vous êtes pas connecté à internet !',
+                                                                                            style: TextStyle(
+                                                                                              fontFamily: "Roboto",
+                                                                                              fontSize: ScreenUtil().setSp(16.0),
+                                                                                              fontWeight: FontWeight.w600,
+                                                                                              color: Colors.black,
+                                                                                            ),
+                                                                                            textAlign: TextAlign.center,
+                                                                                          ),
+                                                                                        ),
+                                                                                        Align(
+                                                                                          child: Padding(
+                                                                                            padding: const EdgeInsets.only(
+                                                                                              top: 26.0,
+                                                                                            ),
+                                                                                            child: FlatButton(
+                                                                                              onPressed: () async {
+                                                                                                Navigator.of(context).pop();
+                                                                                              },
+                                                                                              child: Container(
+                                                                                                padding: EdgeInsets.all(10.0),
+                                                                                                height: ScreenUtil().setHeight(40.5),
+                                                                                                width: ScreenUtil().setWidth(120),
+                                                                                                decoration: BoxDecoration(
+                                                                                                  borderRadius: BorderRadius.circular(5.0),
+                                                                                                  color: Colors.red.shade50,
+                                                                                                ),
+                                                                                                child: Center(
+                                                                                                  child: Text(
+                                                                                                    "OK",
+                                                                                                    style: TextStyle(
+                                                                                                      fontSize: ScreenUtil().setSp(14.0),
+                                                                                                      color: Colors.red,
+                                                                                                      fontWeight: FontWeight.w600,
+                                                                                                    ),
+                                                                                                  ),
+                                                                                                ),
+                                                                                              ),
+                                                                                            ),
+                                                                                          ),
+                                                                                        ),
+                                                                                      ],
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                              );
+                                                                            },
+                                                                          );
+                                                                        }
+                                                                      },
                                                                     );
                                                                   },
                                                                   child:
@@ -1078,85 +1474,12 @@ class _HomePageState extends State<HomePage> {
                                                                     ),
                                                                     child:
                                                                         Container(
-                                                                      height:
-                                                                          85,
-                                                                      width: 85,
-                                                                      decoration:
-                                                                          BoxDecoration(
-                                                                        color: Colors
-                                                                            .white,
-                                                                        borderRadius:
-                                                                            BorderRadius.all(
-                                                                          Radius.circular(
-                                                                              50),
-                                                                        ),
-                                                                        boxShadow: [
-                                                                          BoxShadow(
-                                                                            color:
-                                                                                AppColors.greenDark.withOpacity(0.1),
-                                                                            blurRadius:
-                                                                                4.0,
-                                                                            spreadRadius:
-                                                                                0.0,
-                                                                            offset:
-                                                                                Offset(0.0, 0.0),
-                                                                          )
-                                                                        ],
-                                                                      ),
-                                                                      child:
-                                                                          Padding(
-                                                                        padding:
-                                                                            const EdgeInsets.all(5.0),
-                                                                        child:
-                                                                            Image(
-                                                                          image:
-                                                                              AssetImage(
-                                                                            "assets/logo-part/orange-money.png",
-                                                                          ),
-                                                                          fit: BoxFit
-                                                                              .cover,
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                SizedBox(
-                                                                  width: 40.0,
-                                                                ),
-                                                                InkWell(
-                                                                  onTap: () {
-                                                                    Navigator.of(
-                                                                            context)
-                                                                        .pop();
-                                                                    Navigator.of(
-                                                                            context)
-                                                                        .push(
-                                                                      PageRouteBuilder(
-                                                                        pageBuilder: (_,
-                                                                                __,
-                                                                                ___) =>
-                                                                            PaymentPage(
-                                                                          wallet:
-                                                                              2,
-                                                                        ),
-                                                                      ),
-                                                                    );
-                                                                  },
-                                                                  child:
-                                                                      Material(
-                                                                    elevation:
-                                                                        5,
-                                                                    borderRadius:
-                                                                        BorderRadius
-                                                                            .all(
-                                                                      Radius.circular(
-                                                                          50),
-                                                                    ),
-                                                                    child:
-                                                                        Container(
-                                                                      height:
-                                                                          85,
-                                                                      width: 85,
+                                                                      height: ScreenUtil()
+                                                                          .setHeight(
+                                                                              85),
+                                                                      width: ScreenUtil()
+                                                                          .setWidth(
+                                                                              85),
                                                                       decoration:
                                                                           BoxDecoration(
                                                                         color: Colors
@@ -1207,12 +1530,15 @@ class _HomePageState extends State<HomePage> {
                                               },
                                               child: Container(
                                                 padding: EdgeInsets.all(10.0),
-                                                height: 40.5,
-                                                width: 180,
+                                                height: ScreenUtil()
+                                                    .setHeight(40.5),
+                                                width:
+                                                    ScreenUtil().setWidth(180),
                                                 decoration: BoxDecoration(
                                                   borderRadius:
                                                       BorderRadius.circular(
-                                                          5.0),
+                                                    5.0,
+                                                  ),
                                                   color: Colors.red
                                                       .withOpacity(.3),
                                                 ),
@@ -1220,7 +1546,8 @@ class _HomePageState extends State<HomePage> {
                                                   child: Text(
                                                     "Payer maintenant",
                                                     style: TextStyle(
-                                                      fontSize: 14.0,
+                                                      fontSize: ScreenUtil()
+                                                          .setSp(14.0),
                                                       color: Colors.red,
                                                       fontWeight:
                                                           FontWeight.w400,
@@ -1291,7 +1618,7 @@ class _HomePageState extends State<HomePage> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
                                       color: AppColors.greenDark,
-                                      fontSize: 16,
+                                      fontSize: ScreenUtil().setSp(16.0),
                                     ),
                                     children: [
                                       TextSpan(
@@ -1300,7 +1627,7 @@ class _HomePageState extends State<HomePage> {
                                         style: TextStyle(
                                           fontWeight: FontWeight.w400,
                                           color: AppColors.greenDark,
-                                          fontSize: 12,
+                                          fontSize: ScreenUtil().setSp(12.0),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -1409,8 +1736,10 @@ class _HomePageState extends State<HomePage> {
                                                     BorderRadius.circular(20.0),
                                               ), //this right here
                                               child: Container(
-                                                height: 250,
-                                                width: 320,
+                                                height:
+                                                    ScreenUtil().setHeight(250),
+                                                width:
+                                                    ScreenUtil().setWidth(320),
                                                 child: Padding(
                                                   padding: const EdgeInsets.all(
                                                       12.0),
@@ -1431,13 +1760,15 @@ class _HomePageState extends State<HomePage> {
                                                         ),
                                                       ),
                                                       SizedBox(
-                                                        height: 16,
+                                                        height: ScreenUtil()
+                                                            .setHeight(16),
                                                       ),
                                                       Text(
                                                         "Une erreur s'est produite, veuillez réessayer !",
                                                         style: TextStyle(
                                                           fontFamily: "Roboto",
-                                                          fontSize: 16.0,
+                                                          fontSize: ScreenUtil()
+                                                              .setSp(16.0),
                                                           fontWeight:
                                                               FontWeight.w600,
                                                           color: Colors.black,
@@ -1473,8 +1804,12 @@ class _HomePageState extends State<HomePage> {
                                                                     EdgeInsets
                                                                         .all(
                                                                             10.0),
-                                                                height: 40.5,
-                                                                width: 110,
+                                                                height: ScreenUtil()
+                                                                    .setHeight(
+                                                                        40.5),
+                                                                width: ScreenUtil()
+                                                                    .setWidth(
+                                                                        110),
                                                                 decoration:
                                                                     BoxDecoration(
                                                                   borderRadius:
@@ -1536,7 +1871,7 @@ class _HomePageState extends State<HomePage> {
         bottom: 16,
       ),
       child: Container(
-        height: 40.0,
+        height: ScreenUtil().setHeight(40),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(
@@ -1571,7 +1906,7 @@ class _HomePageState extends State<HomePage> {
               onFieldSubmitted: (value) => {},
               style: TextStyle(
                 color: Colors.black,
-                fontSize: 13.0,
+                fontSize: ScreenUtil().setSp(13.0),
                 fontFamily: "Roboto",
                 fontWeight: FontWeight.w400,
               ),
@@ -1601,7 +1936,8 @@ class _HomePageState extends State<HomePage> {
                 ),
                 hintText: "Rechercher avec le numéro",
                 hintStyle: TextStyle(
-                  fontSize: 12.0,
+                  fontSize: ScreenUtil().setSp(12.0),
+
                   // color: gray.withOpacity(0.5),
                   fontFamily: "Roboto",
                   fontWeight: FontWeight.w400,
@@ -1619,7 +1955,7 @@ class _HomePageState extends State<HomePage> {
       physics: NeverScrollableScrollPhysics(),
       children: <Widget>[
         SizedBox(
-          height: 15.0,
+          height: ScreenUtil().setHeight(15),
         ),
         users.isEmpty
             ? Padding(
@@ -1630,7 +1966,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Container(
                   // width: 220,
-                  height: 200,
+                  height: ScreenUtil().setHeight(200),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.all(Radius.circular(10.0)),
@@ -1652,7 +1988,8 @@ class _HomePageState extends State<HomePage> {
                         child: Text(
                           "Aucun agent pour le moment !",
                           style: TextStyle(
-                            fontSize: 16.0,
+                            fontSize: ScreenUtil().setSp(16.0),
+
                             fontWeight: FontWeight.bold,
                             // color: gray.withOpacity(0.4),
                           ),
@@ -1674,7 +2011,6 @@ class _HomePageState extends State<HomePage> {
                     left: 8,
                     right: 8,
                   ),
-                  // height: 500,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.all(
                       Radius.circular(10.0),
@@ -1767,7 +2103,7 @@ class _HomePageState extends State<HomePage> {
         });
       },
       child: Container(
-        height: 50,
+        height: ScreenUtil().setHeight(50),
         padding: EdgeInsets.only(
           top: 5,
           bottom: 0,
@@ -1785,7 +2121,7 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   user.name,
                   style: TextStyle(
-                    fontSize: 14.0,
+                    fontSize: ScreenUtil().setSp(14.0),
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
                   ),
@@ -1793,7 +2129,7 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   user.phone,
                   style: TextStyle(
-                    fontSize: 14.0,
+                    fontSize: ScreenUtil().setSp(14.0),
                     fontWeight: FontWeight.w300,
                     color: Colors.black,
                   ),
@@ -1807,7 +2143,7 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   _formatCurrency(user.balance),
                   style: TextStyle(
-                    fontSize: 14.0,
+                    fontSize: ScreenUtil().setSp(14.0),
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
                   ),

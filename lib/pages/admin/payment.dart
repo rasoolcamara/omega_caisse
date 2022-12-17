@@ -12,7 +12,7 @@ import 'package:ordering_services/pages/home/home.dart';
 import 'package:ordering_services/services/auth/auth_service.dart';
 import 'package:ordering_services/services/checkout_invoice.dart';
 import 'package:ordering_services/services/softPay/orange_money_senegal.dart';
-import 'package:ordering_services/services/softPay/wave_senegal.dart';
+import 'package:ordering_services/services/softPay/wave.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -461,439 +461,286 @@ class _PaymentPageState extends State<PaymentPage> {
                                               setState(() {
                                                 _loading = true;
                                               });
-                                              final checkoutInvoice =
-                                                  await paydunyaService
-                                                      .checkoutInvoice(5000);
-                                              if (checkoutInvoice != null) {
-                                                var paymentResult = false;
+                                              var paymentResult = false;
 
-                                                switch (widget.wallet) {
-                                                  case 1:
-                                                    paymentResult =
-                                                        await omsnService
-                                                            .payment(
-                                                      _phoneController.text,
-                                                      _codeController.text,
-                                                    );
-                                                    break;
-                                                  case 2:
-                                                    paymentResult =
-                                                        await waveService
-                                                            .payment(
-                                                                _phoneController
-                                                                    .text);
-                                                    break;
+                                              switch (widget.wallet) {
+                                                case 2:
+                                                  paymentResult =
+                                                      await waveService
+                                                          .payment();
+                                                  break;
 
-                                                  default:
-                                                }
+                                                default:
+                                              }
 
-                                                if (paymentResult == true) {
-                                                  // HomePage.of(context).setAppState();
+                                              if (paymentResult == true) {
+                                                // HomePage.of(context).setAppState();
+                                                setState(() {
+                                                  _loading = false;
+                                                });
+                                                launch(waveLaunchUrl,
+                                                    forceSafariVC: false);
+
+                                                if (widget.wallet == 2) {
                                                   setState(() {
-                                                    _loading = false;
+                                                    _paymentLoading = true;
                                                   });
-                                                  if (widget.wallet == 2) {
+                                                  Timer.periodic(
+                                                      Duration(seconds: 5),
+                                                      (timer) async {
+                                                    print(
+                                                        'Runs every Five seconds');
+                                                    print("object");
                                                     setState(() {
-                                                      _paymentLoading = true;
+                                                      _timer++;
                                                     });
-                                                    Timer.periodic(
-                                                        Duration(seconds: 5),
-                                                        (timer) async {
-                                                      print(
-                                                          'Runs every Five seconds');
-                                                      print("object");
+                                                    SharedPreferences _prefs =
+                                                        await SharedPreferences
+                                                            .getInstance();
+                                                    var code = _prefs
+                                                        .getString('code');
+                                                    AuthService authService =
+                                                        AuthService();
+
+                                                    final user =
+                                                        await authService.login(
+                                                      userPhone,
+                                                      code,
+                                                    );
+
+                                                    if (user.suscription == 1) {
                                                       setState(() {
-                                                        _timer++;
+                                                        _paymentLoading = false;
                                                       });
-                                                      SharedPreferences _prefs =
-                                                          await SharedPreferences
-                                                              .getInstance();
-                                                      var code = _prefs
-                                                          .getString('code');
-                                                      AuthService authService =
-                                                          AuthService();
-
-                                                      final user =
-                                                          await authService
-                                                              .login(
-                                                        userPhone,
-                                                        code,
+                                                      timer.cancel();
+                                                      print('Runs CANCELLED');
+                                                      print(DateTime.now());
+                                                      Navigator.of(context)
+                                                          .pushReplacement(
+                                                        MaterialPageRoute(
+                                                          builder: (_) =>
+                                                              HomePage(),
+                                                        ),
                                                       );
+                                                      print(DateTime.now());
+                                                    } else {
+                                                      if (_timer == 59) {
+                                                        print("afterr");
+                                                        timer.cancel();
 
-                                                      if (user.suscription ==
-                                                          1) {
                                                         setState(() {
                                                           _paymentLoading =
                                                               false;
+                                                          _timer = 0;
                                                         });
-                                                        timer.cancel();
-                                                        print('Runs CANCELLED');
-                                                        print(DateTime.now());
-                                                        Navigator.of(context)
-                                                            .pushReplacement(
-                                                          MaterialPageRoute(
-                                                            builder: (_) =>
-                                                                HomePage(),
-                                                          ),
-                                                        );
-                                                        print(DateTime.now());
-                                                      } else {
-                                                        if (_timer == 59) {
-                                                          print("afterr");
-                                                          timer.cancel();
-
-                                                          setState(() {
-                                                            _paymentLoading =
-                                                                false;
-                                                            _timer = 0;
-                                                          });
-                                                        }
                                                       }
-                                                    });
-                                                    // showDialog(
-                                                    //   context: context,
-                                                    //   builder:
-                                                    //       (BuildContext context) {
-                                                    //     return Dialog(
-                                                    //       shape:
-                                                    //           RoundedRectangleBorder(
-                                                    //         borderRadius:
-                                                    //             BorderRadius.circular(
-                                                    //                 20.0),
-                                                    //       ), //this right here
-                                                    //       child: Container(
-                                                    //         height: 290,
-                                                    //         width: 320,
-                                                    //         child: Padding(
-                                                    //           padding:
-                                                    //               const EdgeInsets
-                                                    //                   .all(12.0),
-                                                    //           child: Column(
-                                                    //             mainAxisAlignment:
-                                                    //                 MainAxisAlignment
-                                                    //                     .center,
-                                                    //             crossAxisAlignment:
-                                                    //                 CrossAxisAlignment
-                                                    //                     .start,
-                                                    //             children: [
-                                                    //               Align(
-                                                    //                 child: Container(
-                                                    //                   height: 90,
-                                                    //                   width: 90,
-                                                    //                   decoration:
-                                                    //                       BoxDecoration(
-                                                    //                     borderRadius:
-                                                    //                         BorderRadius
-                                                    //                             .all(
-                                                    //                       Radius.circular(
-                                                    //                           10.0),
-                                                    //                     ),
-                                                    //                     image:
-                                                    //                         DecorationImage(
-                                                    //                       image:
-                                                    //                           AssetImage(
-                                                    //                         'assets/success.png',
-                                                    //                       ),
-                                                    //                     ),
-                                                    //                   ),
-                                                    //                 ),
-                                                    //               ),
-                                                    //               SizedBox(
-                                                    //                 height: 24,
-                                                    //               ),
-                                                    //               Text(
-                                                    //                 'Votre paiement a été initié, veuillez finaliser sur votre téléphone!',
-                                                    //                 style: TextStyle(
-                                                    //                   fontFamily:
-                                                    //                       "Roboto",
-                                                    //                   fontSize: 16.0,
-                                                    //                   fontWeight:
-                                                    //                       FontWeight
-                                                    //                           .w500,
-                                                    //                   color: Colors
-                                                    //                       .black,
-                                                    //                 ),
-                                                    //                 textAlign:
-                                                    //                     TextAlign
-                                                    //                         .center,
-                                                    //               ),
-                                                    //               Align(
-                                                    //                 child: Padding(
-                                                    //                   padding:
-                                                    //                       const EdgeInsets
-                                                    //                           .only(
-                                                    //                     top: 26.0,
-                                                    //                   ),
-                                                    //                   child:
-                                                    //                       FlatButton(
-                                                    //                     onPressed:
-                                                    //                         () async {
-                                                    //                       if (widget
-                                                    //                               .wallet ==
-                                                    //                           2) {
-                                                    //                         Navigator.of(
-                                                    //                                 context)
-                                                    //                             .pop();
-                                                    //                         Timer.periodic(
-                                                    //                             Duration(
-                                                    //                                 seconds: 5),
-                                                    //                             (timer) async {
-                                                    //                           print(
-                                                    //                               'Runs every Five seconds');
-                                                    //                           print(
-                                                    //                               "object");
-                                                    //                           setState(
-                                                    //                               () {
-                                                    //                             _timer++;
-                                                    //                           });
-                                                    //                           SharedPreferences
-                                                    //                               _prefs =
-                                                    //                               await SharedPreferences.getInstance();
-                                                    //                           var code =
-                                                    //                               _prefs.getString('code');
-                                                    //                           AuthService
-                                                    //                               authService =
-                                                    //                               AuthService();
-
-                                                    //                           final user =
-                                                    //                               await authService.login(
-                                                    //                             userPhone,
-                                                    //                             code,
-                                                    //                           );
-
-                                                    //                           if (user.suscription ==
-                                                    //                               1) {
-                                                    //                             setState(
-                                                    //                                 () {
-                                                    //                               _loading =
-                                                    //                                   false;
-                                                    //                             });
-                                                    //                             timer
-                                                    //                                 .cancel();
-                                                    //                             print(
-                                                    //                                 'Runs CANCELLED');
-                                                    //                             print(
-                                                    //                                 DateTime.now());
-                                                    //                             Navigator.of(context)
-                                                    //                                 .pushReplacement(
-                                                    //                               MaterialPageRoute(
-                                                    //                                 builder: (_) => HomePage(),
-                                                    //                               ),
-                                                    //                             );
-                                                    //                             print(
-                                                    //                                 DateTime.now());
-                                                    //                           } else {
-                                                    //                             if (_timer ==
-                                                    //                                 59) {
-                                                    //                               print("afterr");
-                                                    //                               timer.cancel();
-
-                                                    //                               setState(() {
-                                                    //                                 _loading = false;
-                                                    //                                 _timer = 0;
-                                                    //                               });
-                                                    //                             }
-                                                    //                           }
-                                                    //                         });
-                                                    //                       } else {
-                                                    //                         Navigator.of(
-                                                    //                                 context)
-                                                    //                             .pop();
-                                                    //                         Navigator.of(
-                                                    //                                 context)
-                                                    //                             .pushReplacement(
-                                                    //                           MaterialPageRoute(
-                                                    //                             builder: (_) =>
-                                                    //                                 HomePage(),
-                                                    //                           ),
-                                                    //                         );
-                                                    //                       }
-                                                    //                     },
-                                                    //                     child:
-                                                    //                         Container(
-                                                    //                       padding:
-                                                    //                           EdgeInsets.all(
-                                                    //                               10.0),
-                                                    //                       height:
-                                                    //                           40.5,
-                                                    //                       width: 120,
-                                                    //                       decoration:
-                                                    //                           BoxDecoration(
-                                                    //                         borderRadius:
-                                                    //                             BorderRadius.circular(
-                                                    //                                 5.0),
-                                                    //                         color: Colors
-                                                    //                             .green
-                                                    //                             .shade50,
-                                                    //                       ),
-                                                    //                       child:
-                                                    //                           Center(
-                                                    //                         child:
-                                                    //                             Text(
-                                                    //                           "OK",
-                                                    //                           style:
-                                                    //                               TextStyle(
-                                                    //                             fontSize:
-                                                    //                                 14.0,
-                                                    //                             color: Colors
-                                                    //                                 .green
-                                                    //                                 .shade400,
-                                                    //                             fontWeight:
-                                                    //                                 FontWeight.w600,
-                                                    //                           ),
-                                                    //                         ),
-                                                    //                       ),
-                                                    //                     ),
-                                                    //                   ),
-                                                    //                 ),
-                                                    //               ),
-                                                    //             ],
-                                                    //           ),
-                                                    //         ),
-                                                    //       ),
-                                                    //     );
-                                                    //   },
-                                                    // );
-                                                  } else {
-                                                    showDialog(
-                                                      context: context,
-                                                      builder: (BuildContext
-                                                          context) {
-                                                        return Dialog(
-                                                          shape:
-                                                              RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20.0),
-                                                          ), //this right here
-                                                          child: Container(
-                                                            height: 290,
-                                                            width: 320,
-                                                            child: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                          .all(
-                                                                      12.0),
-                                                              child: Column(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .center,
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
-                                                                children: [
-                                                                  Align(
-                                                                    child:
-                                                                        Container(
-                                                                      height:
-                                                                          90,
-                                                                      width: 90,
-                                                                      decoration:
-                                                                          BoxDecoration(
-                                                                        borderRadius:
-                                                                            BorderRadius.all(
-                                                                          Radius.circular(
-                                                                              10.0),
-                                                                        ),
-                                                                        image:
-                                                                            DecorationImage(
-                                                                          image:
-                                                                              AssetImage(
-                                                                            'assets/success.png',
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                  SizedBox(
-                                                                    height: 24,
-                                                                  ),
-                                                                  Text(
-                                                                    'Votre paiement a été éffectuée avec succès!',
-                                                                    style:
-                                                                        TextStyle(
-                                                                      fontFamily:
-                                                                          "Roboto",
-                                                                      fontSize:
-                                                                          16.0,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w500,
-                                                                      color: Colors
-                                                                          .black,
-                                                                    ),
-                                                                    textAlign:
-                                                                        TextAlign
-                                                                            .center,
-                                                                  ),
-                                                                  Align(
-                                                                    child:
-                                                                        Padding(
-                                                                      padding:
-                                                                          const EdgeInsets
-                                                                              .only(
-                                                                        top:
-                                                                            26.0,
-                                                                      ),
-                                                                      child:
-                                                                          FlatButton(
-                                                                        onPressed:
-                                                                            () async {
-                                                                          Navigator.of(context)
-                                                                              .pop();
-                                                                          Navigator.of(context)
-                                                                              .pushReplacement(
-                                                                            MaterialPageRoute(
-                                                                              builder: (_) => HomePage(),
-                                                                            ),
-                                                                          );
-                                                                        },
-                                                                        child:
-                                                                            Container(
-                                                                          padding:
-                                                                              EdgeInsets.all(10.0),
-                                                                          height:
-                                                                              40.5,
-                                                                          width:
-                                                                              120,
-                                                                          decoration:
-                                                                              BoxDecoration(
-                                                                            borderRadius:
-                                                                                BorderRadius.circular(5.0),
-                                                                            color:
-                                                                                Colors.green.shade50,
-                                                                          ),
-                                                                          child:
-                                                                              Center(
-                                                                            child:
-                                                                                Text(
-                                                                              "OK",
-                                                                              style: TextStyle(
-                                                                                fontSize: 14.0,
-                                                                                color: Colors.green.shade400,
-                                                                                fontWeight: FontWeight.w600,
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                    );
-                                                  }
-                                                } else {
-                                                  print(
-                                                      "Un problème est survenu!");
-                                                  setState(() {
-                                                    _loading = false;
+                                                    }
                                                   });
+                                                  // showDialog(
+                                                  //   context: context,
+                                                  //   builder:
+                                                  //       (BuildContext context) {
+                                                  //     return Dialog(
+                                                  //       shape:
+                                                  //           RoundedRectangleBorder(
+                                                  //         borderRadius:
+                                                  //             BorderRadius.circular(
+                                                  //                 20.0),
+                                                  //       ), //this right here
+                                                  //       child: Container(
+                                                  //         height: 290,
+                                                  //         width: 320,
+                                                  //         child: Padding(
+                                                  //           padding:
+                                                  //               const EdgeInsets
+                                                  //                   .all(12.0),
+                                                  //           child: Column(
+                                                  //             mainAxisAlignment:
+                                                  //                 MainAxisAlignment
+                                                  //                     .center,
+                                                  //             crossAxisAlignment:
+                                                  //                 CrossAxisAlignment
+                                                  //                     .start,
+                                                  //             children: [
+                                                  //               Align(
+                                                  //                 child: Container(
+                                                  //                   height: 90,
+                                                  //                   width: 90,
+                                                  //                   decoration:
+                                                  //                       BoxDecoration(
+                                                  //                     borderRadius:
+                                                  //                         BorderRadius
+                                                  //                             .all(
+                                                  //                       Radius.circular(
+                                                  //                           10.0),
+                                                  //                     ),
+                                                  //                     image:
+                                                  //                         DecorationImage(
+                                                  //                       image:
+                                                  //                           AssetImage(
+                                                  //                         'assets/success.png',
+                                                  //                       ),
+                                                  //                     ),
+                                                  //                   ),
+                                                  //                 ),
+                                                  //               ),
+                                                  //               SizedBox(
+                                                  //                 height: 24,
+                                                  //               ),
+                                                  //               Text(
+                                                  //                 'Votre paiement a été initié, veuillez finaliser sur votre téléphone!',
+                                                  //                 style: TextStyle(
+                                                  //                   fontFamily:
+                                                  //                       "Roboto",
+                                                  //                   fontSize: 16.0,
+                                                  //                   fontWeight:
+                                                  //                       FontWeight
+                                                  //                           .w500,
+                                                  //                   color: Colors
+                                                  //                       .black,
+                                                  //                 ),
+                                                  //                 textAlign:
+                                                  //                     TextAlign
+                                                  //                         .center,
+                                                  //               ),
+                                                  //               Align(
+                                                  //                 child: Padding(
+                                                  //                   padding:
+                                                  //                       const EdgeInsets
+                                                  //                           .only(
+                                                  //                     top: 26.0,
+                                                  //                   ),
+                                                  //                   child:
+                                                  //                       FlatButton(
+                                                  //                     onPressed:
+                                                  //                         () async {
+                                                  //                       if (widget
+                                                  //                               .wallet ==
+                                                  //                           2) {
+                                                  //                         Navigator.of(
+                                                  //                                 context)
+                                                  //                             .pop();
+                                                  //                         Timer.periodic(
+                                                  //                             Duration(
+                                                  //                                 seconds: 5),
+                                                  //                             (timer) async {
+                                                  //                           print(
+                                                  //                               'Runs every Five seconds');
+                                                  //                           print(
+                                                  //                               "object");
+                                                  //                           setState(
+                                                  //                               () {
+                                                  //                             _timer++;
+                                                  //                           });
+                                                  //                           SharedPreferences
+                                                  //                               _prefs =
+                                                  //                               await SharedPreferences.getInstance();
+                                                  //                           var code =
+                                                  //                               _prefs.getString('code');
+                                                  //                           AuthService
+                                                  //                               authService =
+                                                  //                               AuthService();
+
+                                                  //                           final user =
+                                                  //                               await authService.login(
+                                                  //                             userPhone,
+                                                  //                             code,
+                                                  //                           );
+
+                                                  //                           if (user.suscription ==
+                                                  //                               1) {
+                                                  //                             setState(
+                                                  //                                 () {
+                                                  //                               _loading =
+                                                  //                                   false;
+                                                  //                             });
+                                                  //                             timer
+                                                  //                                 .cancel();
+                                                  //                             print(
+                                                  //                                 'Runs CANCELLED');
+                                                  //                             print(
+                                                  //                                 DateTime.now());
+                                                  //                             Navigator.of(context)
+                                                  //                                 .pushReplacement(
+                                                  //                               MaterialPageRoute(
+                                                  //                                 builder: (_) => HomePage(),
+                                                  //                               ),
+                                                  //                             );
+                                                  //                             print(
+                                                  //                                 DateTime.now());
+                                                  //                           } else {
+                                                  //                             if (_timer ==
+                                                  //                                 59) {
+                                                  //                               print("afterr");
+                                                  //                               timer.cancel();
+
+                                                  //                               setState(() {
+                                                  //                                 _loading = false;
+                                                  //                                 _timer = 0;
+                                                  //                               });
+                                                  //                             }
+                                                  //                           }
+                                                  //                         });
+                                                  //                       } else {
+                                                  //                         Navigator.of(
+                                                  //                                 context)
+                                                  //                             .pop();
+                                                  //                         Navigator.of(
+                                                  //                                 context)
+                                                  //                             .pushReplacement(
+                                                  //                           MaterialPageRoute(
+                                                  //                             builder: (_) =>
+                                                  //                                 HomePage(),
+                                                  //                           ),
+                                                  //                         );
+                                                  //                       }
+                                                  //                     },
+                                                  //                     child:
+                                                  //                         Container(
+                                                  //                       padding:
+                                                  //                           EdgeInsets.all(
+                                                  //                               10.0),
+                                                  //                       height:
+                                                  //                           40.5,
+                                                  //                       width: 120,
+                                                  //                       decoration:
+                                                  //                           BoxDecoration(
+                                                  //                         borderRadius:
+                                                  //                             BorderRadius.circular(
+                                                  //                                 5.0),
+                                                  //                         color: Colors
+                                                  //                             .green
+                                                  //                             .shade50,
+                                                  //                       ),
+                                                  //                       child:
+                                                  //                           Center(
+                                                  //                         child:
+                                                  //                             Text(
+                                                  //                           "OK",
+                                                  //                           style:
+                                                  //                               TextStyle(
+                                                  //                             fontSize:
+                                                  //                                 14.0,
+                                                  //                             color: Colors
+                                                  //                                 .green
+                                                  //                                 .shade400,
+                                                  //                             fontWeight:
+                                                  //                                 FontWeight.w600,
+                                                  //                           ),
+                                                  //                         ),
+                                                  //                       ),
+                                                  //                     ),
+                                                  //                   ),
+                                                  //                 ),
+                                                  //               ),
+                                                  //             ],
+                                                  //           ),
+                                                  //         ),
+                                                  //       ),
+                                                  //     );
+                                                  //   },
+                                                  // );
+                                                } else {
                                                   showDialog(
                                                     context: context,
                                                     builder:
@@ -907,7 +754,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                                                       20.0),
                                                         ), //this right here
                                                         child: Container(
-                                                          height: 240,
+                                                          height: 290,
                                                           width: 320,
                                                           child: Padding(
                                                             padding:
@@ -922,19 +769,33 @@ class _PaymentPageState extends State<PaymentPage> {
                                                                       .start,
                                                               children: [
                                                                 Align(
-                                                                  child: Icon(
-                                                                    Icons
-                                                                        .warning_amber_rounded,
-                                                                    color: Colors
-                                                                        .red,
-                                                                    size: 40,
+                                                                  child:
+                                                                      Container(
+                                                                    height: 90,
+                                                                    width: 90,
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                      borderRadius:
+                                                                          BorderRadius
+                                                                              .all(
+                                                                        Radius.circular(
+                                                                            10.0),
+                                                                      ),
+                                                                      image:
+                                                                          DecorationImage(
+                                                                        image:
+                                                                            AssetImage(
+                                                                          'assets/success.png',
+                                                                        ),
+                                                                      ),
+                                                                    ),
                                                                   ),
                                                                 ),
                                                                 SizedBox(
-                                                                  height: 16,
+                                                                  height: 24,
                                                                 ),
                                                                 Text(
-                                                                  "Assurez-vous d'avoir saisi un numéro valable et ayant assez de fonds!",
+                                                                  'Votre paiement a été éffectuée avec succès!',
                                                                   style:
                                                                       TextStyle(
                                                                     fontFamily:
@@ -943,7 +804,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                                                         16.0,
                                                                     fontWeight:
                                                                         FontWeight
-                                                                            .w600,
+                                                                            .w500,
                                                                     color: Colors
                                                                         .black,
                                                                   ),
@@ -965,6 +826,13 @@ class _PaymentPageState extends State<PaymentPage> {
                                                                           () async {
                                                                         Navigator.of(context)
                                                                             .pop();
+                                                                        Navigator.of(context)
+                                                                            .pushReplacement(
+                                                                          MaterialPageRoute(
+                                                                            builder: (_) =>
+                                                                                HomePage(),
+                                                                          ),
+                                                                        );
                                                                       },
                                                                       child:
                                                                           Container(
@@ -979,7 +847,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                                                           borderRadius:
                                                                               BorderRadius.circular(5.0),
                                                                           color: Colors
-                                                                              .red
+                                                                              .green
                                                                               .shade50,
                                                                         ),
                                                                         child:
@@ -990,7 +858,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                                                             style:
                                                                                 TextStyle(
                                                                               fontSize: 14.0,
-                                                                              color: Colors.red,
+                                                                              color: Colors.green.shade400,
                                                                               fontWeight: FontWeight.w600,
                                                                             ),
                                                                           ),
@@ -1010,6 +878,9 @@ class _PaymentPageState extends State<PaymentPage> {
                                               } else {
                                                 print(
                                                     "Un problème est survenu!");
+                                                setState(() {
+                                                  _loading = false;
+                                                });
                                                 showDialog(
                                                   context: context,
                                                   builder:
@@ -1022,7 +893,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                                                 .circular(20.0),
                                                       ), //this right here
                                                       child: Container(
-                                                        height: 200,
+                                                        height: 240,
                                                         width: 320,
                                                         child: Padding(
                                                           padding:
@@ -1049,7 +920,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                                                 height: 16,
                                                               ),
                                                               Text(
-                                                                'Un problème est survenu veuillez réessayer!',
+                                                                "Assurez-vous d'avoir saisi un numéro valable et ayant assez de fonds!",
                                                                 style:
                                                                     TextStyle(
                                                                   fontFamily:

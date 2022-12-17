@@ -1,17 +1,24 @@
 // ignore_for_file: prefer_const_constructors_in_immutables, prefer_const_constructors, prefer_const_literals_to_create_immutables, deprecated_member_use
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:ordering_services/constants/app_api.dart';
 import 'package:ordering_services/pages/admin/payment.dart';
 import 'package:ordering_services/pages/auth/password_update.dart';
 import 'package:ordering_services/pages/history/history.dart';
+import 'package:ordering_services/pages/home/home.dart';
+import 'package:ordering_services/services/auth/auth_service.dart';
 import 'package:ordering_services/utils/next_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:ordering_services/services/softPay/wave.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import 'package:ordering_services/constants/app_colors.dart';
 import 'package:ordering_services/pages/auth/login.dart';
@@ -25,6 +32,7 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   // final UserService userService = UserService();
+  final WaveService waveService = WaveService();
 
   String _countryCode = "+221";
 
@@ -35,6 +43,12 @@ class _AdminPageState extends State<AdminPage> {
     lineWidth: 10.0,
     size: 100.0,
   );
+
+  bool _paymentLoading = false;
+
+  bool payed = false;
+
+  int _timer = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +63,6 @@ class _AdminPageState extends State<AdminPage> {
           "Panneau",
           style: TextStyle(
             fontFamily: "Roboto",
-            fontSize: 22.0,
             fontWeight: FontWeight.bold,
             color: AppColors.greenDark,
           ),
@@ -74,8 +87,8 @@ class _AdminPageState extends State<AdminPage> {
                       child: Column(
                         children: <Widget>[
                           Container(
-                            height: 90,
-                            width: 350,
+                            height: ScreenUtil().setHeight(90),
+                            width: ScreenUtil().setWidth(350),
                             decoration: BoxDecoration(
                               // image: DecorationImage(
                               //   image: AssetImage('assets/images/home.png'),
@@ -91,8 +104,8 @@ class _AdminPageState extends State<AdminPage> {
                               padding: const EdgeInsets.only(right: 0.0),
                               child: ListTile(
                                 leading: Container(
-                                  height: 55,
-                                  width: 55,
+                                  height: ScreenUtil().setHeight(55),
+                                  width: ScreenUtil().setWidth(55),
                                   decoration: BoxDecoration(
                                     color: Colors.grey.shade200,
                                     borderRadius: BorderRadius.all(
@@ -111,7 +124,7 @@ class _AdminPageState extends State<AdminPage> {
                                     userName,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 18,
+                                      fontSize: ScreenUtil().setSp(18),
                                       color: Colors.black,
                                     ),
                                   ),
@@ -120,7 +133,7 @@ class _AdminPageState extends State<AdminPage> {
                                   userAddress + "  -  " + userPhone,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w400,
-                                    fontSize: 12,
+                                    fontSize: ScreenUtil().setSp(12),
                                     color: Colors.black,
                                   ),
                                 ),
@@ -128,7 +141,7 @@ class _AdminPageState extends State<AdminPage> {
                             ),
                           ),
                           SizedBox(
-                            height: 16,
+                            height: ScreenUtil().setHeight(16),
                           ),
                           Divider(
                             height: 0.5,
@@ -152,8 +165,8 @@ class _AdminPageState extends State<AdminPage> {
                                     ),
                                     child: ListTile(
                                       leading: Container(
-                                        height: 50,
-                                        width: 50,
+                                        height: ScreenUtil().setHeight(50),
+                                        width: ScreenUtil().setWidth(50),
                                         decoration: BoxDecoration(
                                           color: Colors.grey.shade200,
                                           borderRadius: BorderRadius.all(
@@ -172,7 +185,7 @@ class _AdminPageState extends State<AdminPage> {
                                           "Historique",
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
-                                            fontSize: 14,
+                                            fontSize: ScreenUtil().setSp(14),
                                             color: Colors.black,
                                           ),
                                         ),
@@ -187,7 +200,9 @@ class _AdminPageState extends State<AdminPage> {
                                 )
                               : Container(),
                           // Paiement
-                          userProfile == 3 && userSubscription != 1
+                          userProfile == 3 &&
+                                  userSubscription != 1 &&
+                                  paymentIsOn == 1
                               ? InkWell(
                                   onTap: () {
                                     print("Paiement");
@@ -206,7 +221,7 @@ class _AdminPageState extends State<AdminPage> {
                                           ),
                                           width:
                                               MediaQuery.of(context).size.width,
-                                          height: 250,
+                                          height: ScreenUtil().setHeight(250),
                                           child: Padding(
                                             padding: const EdgeInsets.only(
                                               top: 40,
@@ -228,7 +243,8 @@ class _AdminPageState extends State<AdminPage> {
                                                     style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.w400,
-                                                      fontSize: 14,
+                                                      fontSize: ScreenUtil()
+                                                          .setSp(14),
                                                       color: Colors.black,
                                                     ),
                                                   ),
@@ -239,7 +255,7 @@ class _AdminPageState extends State<AdminPage> {
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
-                                                    InkWell(
+                                                    /* InkWell(
                                                       onTap: () {
                                                         Navigator.of(context)
                                                             .pop();
@@ -303,20 +319,304 @@ class _AdminPageState extends State<AdminPage> {
                                                     ),
                                                     SizedBox(
                                                       width: 40.0,
-                                                    ),
+                                                    ), */
                                                     InkWell(
-                                                      onTap: () {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                        Navigator.of(context)
-                                                            .push(
-                                                          PageRouteBuilder(
-                                                            pageBuilder:
-                                                                (_, __, ___) =>
-                                                                    PaymentPage(
-                                                              wallet: 2,
-                                                            ),
-                                                          ),
+                                                      onTap: () async {
+                                                        (Connectivity()
+                                                                .checkConnectivity())
+                                                            .then(
+                                                          (connectivityResult) async {
+                                                            if (connectivityResult ==
+                                                                    ConnectivityResult
+                                                                        .mobile ||
+                                                                connectivityResult ==
+                                                                    ConnectivityResult
+                                                                        .wifi) {
+                                                              setState(() {
+                                                                _loading = true;
+                                                              });
+                                                              var paymentResult =
+                                                                  await waveService
+                                                                      .payment();
+
+                                                              if (paymentResult ==
+                                                                  true) {
+                                                                // HomePage.of(context).setAppState();
+                                                                setState(() {
+                                                                  _loading =
+                                                                      false;
+                                                                });
+                                                                launch(
+                                                                    waveLaunchUrl,
+                                                                    forceSafariVC:
+                                                                        false);
+
+                                                                setState(() {
+                                                                  _paymentLoading =
+                                                                      true;
+                                                                });
+                                                                Timer.periodic(
+                                                                    Duration(
+                                                                        seconds:
+                                                                            5),
+                                                                    (timer) async {
+                                                                  print(
+                                                                      'Runs every Five seconds');
+                                                                  print(
+                                                                      "object");
+                                                                  setState(() {
+                                                                    _timer++;
+                                                                  });
+                                                                  SharedPreferences
+                                                                      _prefs =
+                                                                      await SharedPreferences
+                                                                          .getInstance();
+                                                                  var code = _prefs
+                                                                      .getString(
+                                                                          'code');
+                                                                  AuthService
+                                                                      authService =
+                                                                      AuthService();
+
+                                                                  final user =
+                                                                      await authService
+                                                                          .login(
+                                                                    userPhone,
+                                                                    code,
+                                                                  );
+
+                                                                  if (user.suscription ==
+                                                                      1) {
+                                                                    setState(
+                                                                        () {
+                                                                      _paymentLoading =
+                                                                          false;
+                                                                    });
+                                                                    timer
+                                                                        .cancel();
+                                                                    print(
+                                                                        'Runs CANCELLED');
+                                                                    print(DateTime
+                                                                        .now());
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .pushReplacement(
+                                                                      MaterialPageRoute(
+                                                                        builder:
+                                                                            (_) =>
+                                                                                HomePage(),
+                                                                      ),
+                                                                    );
+                                                                    print(DateTime
+                                                                        .now());
+                                                                  } else {
+                                                                    if (_timer ==
+                                                                        59) {
+                                                                      print(
+                                                                          "afterr");
+                                                                      timer
+                                                                          .cancel();
+
+                                                                      setState(
+                                                                          () {
+                                                                        _paymentLoading =
+                                                                            false;
+                                                                        _timer =
+                                                                            0;
+                                                                      });
+                                                                    }
+                                                                  }
+                                                                });
+                                                              } else {
+                                                                print(
+                                                                    "Un problème est survenu!");
+                                                                setState(() {
+                                                                  _loading =
+                                                                      false;
+                                                                });
+                                                                showDialog(
+                                                                  context:
+                                                                      context,
+                                                                  builder:
+                                                                      (BuildContext
+                                                                          context) {
+                                                                    return Dialog(
+                                                                      shape:
+                                                                          RoundedRectangleBorder(
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(20.0),
+                                                                      ), //this right here
+                                                                      child:
+                                                                          Container(
+                                                                        height:
+                                                                            240,
+                                                                        width:
+                                                                            320,
+                                                                        child:
+                                                                            Padding(
+                                                                          padding:
+                                                                              const EdgeInsets.all(12.0),
+                                                                          child:
+                                                                              Column(
+                                                                            mainAxisAlignment:
+                                                                                MainAxisAlignment.center,
+                                                                            crossAxisAlignment:
+                                                                                CrossAxisAlignment.start,
+                                                                            children: [
+                                                                              Align(
+                                                                                child: Icon(
+                                                                                  Icons.warning_amber_rounded,
+                                                                                  color: Colors.red,
+                                                                                  size: 40,
+                                                                                ),
+                                                                              ),
+                                                                              SizedBox(
+                                                                                height: ScreenUtil().setHeight(16),
+                                                                              ),
+                                                                              Text(
+                                                                                "Assurez-vous d'avoir saisi un numéro valable et ayant assez de fonds!",
+                                                                                style: TextStyle(
+                                                                                  fontFamily: "Roboto",
+                                                                                  fontSize: ScreenUtil().setSp(15),
+                                                                                  fontWeight: FontWeight.w600,
+                                                                                  color: Colors.black,
+                                                                                ),
+                                                                                textAlign: TextAlign.center,
+                                                                              ),
+                                                                              Align(
+                                                                                child: Padding(
+                                                                                  padding: const EdgeInsets.only(
+                                                                                    top: 26.0,
+                                                                                  ),
+                                                                                  child: FlatButton(
+                                                                                    onPressed: () async {
+                                                                                      Navigator.of(context).pop();
+                                                                                    },
+                                                                                    child: Container(
+                                                                                      padding: EdgeInsets.all(10.0),
+                                                                                      height: ScreenUtil().setHeight(40.5),
+                                                                                      width: ScreenUtil().setWidth(120),
+                                                                                      decoration: BoxDecoration(
+                                                                                        borderRadius: BorderRadius.circular(5.0),
+                                                                                        color: Colors.red.shade50,
+                                                                                      ),
+                                                                                      child: Center(
+                                                                                        child: Text(
+                                                                                          "OK",
+                                                                                          style: TextStyle(
+                                                                                            fontSize: ScreenUtil().setSp(14),
+                                                                                            color: Colors.red,
+                                                                                            fontWeight: FontWeight.w600,
+                                                                                          ),
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                );
+                                                              }
+                                                            } else {
+                                                              print(
+                                                                  "Un problème est survenu!");
+                                                              showDialog(
+                                                                context:
+                                                                    context,
+                                                                builder:
+                                                                    (BuildContext
+                                                                        context) {
+                                                                  return Dialog(
+                                                                    shape:
+                                                                        RoundedRectangleBorder(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              20.0),
+                                                                    ), //this right here
+                                                                    child:
+                                                                        Container(
+                                                                      height:
+                                                                          200,
+                                                                      width:
+                                                                          320,
+                                                                      child:
+                                                                          Padding(
+                                                                        padding:
+                                                                            const EdgeInsets.all(12.0),
+                                                                        child:
+                                                                            Column(
+                                                                          mainAxisAlignment:
+                                                                              MainAxisAlignment.center,
+                                                                          crossAxisAlignment:
+                                                                              CrossAxisAlignment.start,
+                                                                          children: [
+                                                                            Align(
+                                                                              child: Icon(
+                                                                                Icons.warning_amber_rounded,
+                                                                                color: Colors.red,
+                                                                                size: 40,
+                                                                              ),
+                                                                            ),
+                                                                            SizedBox(
+                                                                              height: ScreenUtil().setHeight(16),
+                                                                            ),
+                                                                            Center(
+                                                                              child: Text(
+                                                                                'Vous êtes pas connecté à internet !',
+                                                                                style: TextStyle(
+                                                                                  fontFamily: "Roboto",
+                                                                                  fontSize: ScreenUtil().setSp(15),
+                                                                                  fontWeight: FontWeight.w600,
+                                                                                  color: Colors.black,
+                                                                                ),
+                                                                                textAlign: TextAlign.center,
+                                                                              ),
+                                                                            ),
+                                                                            Align(
+                                                                              child: Padding(
+                                                                                padding: const EdgeInsets.only(
+                                                                                  top: 26.0,
+                                                                                ),
+                                                                                child: FlatButton(
+                                                                                  onPressed: () async {
+                                                                                    Navigator.of(context).pop();
+                                                                                  },
+                                                                                  child: Container(
+                                                                                    padding: EdgeInsets.all(10.0),
+                                                                                    height: ScreenUtil().setHeight(40.5),
+                                                                                    width: ScreenUtil().setWidth(120),
+                                                                                    decoration: BoxDecoration(
+                                                                                      borderRadius: BorderRadius.circular(5.0),
+                                                                                      color: Colors.red.shade50,
+                                                                                    ),
+                                                                                    child: Center(
+                                                                                      child: Text(
+                                                                                        "OK",
+                                                                                        style: TextStyle(
+                                                                                          fontSize: ScreenUtil().setSp(14),
+                                                                                          color: Colors.red,
+                                                                                          fontWeight: FontWeight.w600,
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  );
+                                                                },
+                                                              );
+                                                            }
+                                                          },
                                                         );
                                                       },
                                                       child: Material(
@@ -326,8 +626,10 @@ class _AdminPageState extends State<AdminPage> {
                                                           Radius.circular(50),
                                                         ),
                                                         child: Container(
-                                                          height: 85,
-                                                          width: 85,
+                                                          height: ScreenUtil()
+                                                              .setHeight(85),
+                                                          width: ScreenUtil()
+                                                              .setWidth(85),
                                                           decoration:
                                                               BoxDecoration(
                                                             color: Colors.white,
@@ -382,8 +684,8 @@ class _AdminPageState extends State<AdminPage> {
                                     ),
                                     child: ListTile(
                                       leading: Container(
-                                        height: 50,
-                                        width: 50,
+                                        height: ScreenUtil().setHeight(50),
+                                        width: ScreenUtil().setWidth(50),
                                         decoration: BoxDecoration(
                                           color: Colors.grey.shade200,
                                           borderRadius: BorderRadius.all(
@@ -402,7 +704,7 @@ class _AdminPageState extends State<AdminPage> {
                                           "Paiement",
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
-                                            fontSize: 14,
+                                            fontSize: ScreenUtil().setSp(14),
                                             color: Colors.black,
                                           ),
                                         ),
@@ -414,7 +716,7 @@ class _AdminPageState extends State<AdminPage> {
                                           "Veullez payer votre abonnement!",
                                           style: TextStyle(
                                             fontWeight: FontWeight.w300,
-                                            fontSize: 11,
+                                            fontSize: ScreenUtil().setSp(11),
                                             color: Colors.red,
                                           ),
                                         ),
@@ -444,8 +746,8 @@ class _AdminPageState extends State<AdminPage> {
                               ),
                               child: ListTile(
                                 leading: Container(
-                                  height: 50,
-                                  width: 50,
+                                  height: ScreenUtil().setHeight(50),
+                                  width: ScreenUtil().setWidth(50),
                                   decoration: BoxDecoration(
                                     color: Colors.grey.shade200,
                                     borderRadius: BorderRadius.all(
@@ -464,7 +766,7 @@ class _AdminPageState extends State<AdminPage> {
                                     "Modifier mon mot de passe",
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      fontSize: 14,
+                                      fontSize: ScreenUtil().setSp(14),
                                       color: Colors.black,
                                     ),
                                   ),
@@ -492,8 +794,8 @@ class _AdminPageState extends State<AdminPage> {
                               ),
                               child: ListTile(
                                 leading: Container(
-                                  height: 50,
-                                  width: 50,
+                                  height: ScreenUtil().setHeight(50),
+                                  width: ScreenUtil().setWidth(50),
                                   decoration: BoxDecoration(
                                     color: Colors.grey.shade200,
                                     borderRadius: BorderRadius.all(
@@ -512,7 +814,7 @@ class _AdminPageState extends State<AdminPage> {
                                     "Contacter un de nos agents",
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      fontSize: 14,
+                                      fontSize: ScreenUtil().setSp(14),
                                       color: Colors.black,
                                     ),
                                   ),
@@ -537,8 +839,8 @@ class _AdminPageState extends State<AdminPage> {
                                       borderRadius: BorderRadius.circular(20.0),
                                     ), //this right here
                                     child: Container(
-                                      height: 250,
-                                      width: 320,
+                                      height: ScreenUtil().setHeight(250),
+                                      width: ScreenUtil().setWidth(320),
                                       child: Padding(
                                         padding: const EdgeInsets.all(12.0),
                                         child: Column(
@@ -555,13 +857,15 @@ class _AdminPageState extends State<AdminPage> {
                                               ),
                                             ),
                                             SizedBox(
-                                              height: 16,
+                                              height:
+                                                  ScreenUtil().setHeight(16),
                                             ),
                                             Text(
                                               'Êtes-vous sûr de vouloir vous déconnecter',
                                               style: TextStyle(
                                                 fontFamily: "Roboto",
-                                                fontSize: 16.0,
+                                                fontSize:
+                                                    ScreenUtil().setSp(16),
                                                 fontWeight: FontWeight.w600,
                                                 color: Colors.black,
                                               ),
@@ -619,8 +923,10 @@ class _AdminPageState extends State<AdminPage> {
                                                     child: Container(
                                                       padding:
                                                           EdgeInsets.all(10.0),
-                                                      height: 40.5,
-                                                      width: 110,
+                                                      height: ScreenUtil()
+                                                          .setHeight(40.5),
+                                                      width: ScreenUtil()
+                                                          .setWidth(110),
                                                       decoration: BoxDecoration(
                                                         borderRadius:
                                                             BorderRadius
@@ -632,7 +938,9 @@ class _AdminPageState extends State<AdminPage> {
                                                         child: Text(
                                                           "Déconnexion",
                                                           style: TextStyle(
-                                                            fontSize: 14.0,
+                                                            fontSize:
+                                                                ScreenUtil()
+                                                                    .setSp(14),
                                                             color: Colors.red,
                                                             fontWeight:
                                                                 FontWeight.w400,
@@ -660,8 +968,8 @@ class _AdminPageState extends State<AdminPage> {
                               ),
                               child: ListTile(
                                 leading: Container(
-                                  height: 50,
-                                  width: 50,
+                                  height: ScreenUtil().setHeight(50),
+                                  width: ScreenUtil().setWidth(50),
                                   decoration: BoxDecoration(
                                     color: Colors.red.shade50,
                                     borderRadius: BorderRadius.all(
@@ -680,7 +988,7 @@ class _AdminPageState extends State<AdminPage> {
                                     "Se déconnecter",
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      fontSize: 15,
+                                      fontSize: ScreenUtil().setSp(15),
                                       color: Colors.black,
                                     ),
                                   ),

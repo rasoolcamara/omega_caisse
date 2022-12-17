@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:ordering_services/constants/app_api.dart';
 import 'package:ordering_services/database/database_helper.dart';
+import 'package:ordering_services/models/app_setting.dart';
 import 'package:ordering_services/models/products.dart';
 import 'package:http/http.dart' as http;
 
@@ -54,5 +55,26 @@ class ProductService {
     final prod = await helper.deleteAllOrders();
     // print('inserted row: $prod');
     return true;
+  }
+
+  Future<AppSetting> getAppSetting() async {
+    http.Response res = await http.get(
+      Uri.parse(baseURL + 'auth/get-app-setting'),
+      headers: <String, String>{
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    );
+
+    var body = jsonDecode(res.body);
+    if (body['success'] == true) {
+      AppSetting appSetting = AppSetting.fromJson(body['app_setting']);
+      amountToPay = appSetting.amountToPay;
+      paymentIsOn = appSetting.isPaymentOn;
+      waveAPIKEY = appSetting.waveAPIKEY;
+      return appSetting;
+    } else {
+      return null;
+    }
   }
 }

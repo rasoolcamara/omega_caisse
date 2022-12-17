@@ -19,15 +19,10 @@ String userName;
 String userAddress;
 int categoryId;
 
-String appStoreUrl = "https://apps.apple.com/us/app/sendkwe/id1600051085";
-String playStoreUrl =
-    "https://play.google.com/store/apps/details?id=com.rasool.sendkwe";
+double amountToPay = 5000;
 
-String paydunyaMasterKey =
-    'ktGGfOBC-bXKN-M0Hg-BiAt-wH5Jd08yw4WW'; // 'WgedBb3h-KMie-lsNN-XCTj-jMUg1tcPkHs8';
-String paydunyaPrivateKey =
-    'live_private_2otWQ954DnvfE8X0iIpPK3Kl5c4'; // 'live_private_LjGl1jBePaFHmJMPQcBsYWoNWgg';
-String paydunyaToken = 'ilaUrfT6Tqdwm0aL3gLw'; // '7v1HHSJSbyT2kR8xjrkr';
-String cancelUrl = baseURL + 'api/payment/cancel';
-String returnUrl = baseURL + 'api/payment/return';
-String callbackUrl = baseURL + 'api/callback';
+String waveLaunchUrl = '';
+String waveAPIKEY = '';
+int paymentIsOn = 0;
+String playStoreUrl =
+    "https://play.google.com/store/apps/details?id=com.omegatech.omegacaisse";

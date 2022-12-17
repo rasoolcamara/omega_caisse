@@ -9,6 +9,7 @@ class AppColors {
   static const Color ACCENT_COLOR = Color(0xFF78909c);
   static const Color ACCENT_COLOR_LIGHT = Color(0xFFa7c0cd);
   static const Color ACCENT_COLOR_DARK = Color(0xFF4b636e);
+  static const Color red = Color(0xffF0142F);
 
   static const Color green = Color(0xFFA4EEAB);
   static const Color green1 = Color(0xFFF8FAFA);

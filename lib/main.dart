@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:ordering_services/pages/splash_page.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() async {
   HttpOverrides.global = MyHttpOverrides();
@@ -13,13 +14,22 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Omega Caisse',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: SplashScreen(),
+    //Set the fit size (Find your UI design, look at the dimensions of the device screen and fill it in,unit in dp)
+    return ScreenUtilInit(
+      // designSize: const Size(360, 690),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Omega Caisse',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+          ),
+          home: child,
+        );
+      },
+      child: SplashScreen(),
     );
   }
 }
